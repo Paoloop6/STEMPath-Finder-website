@@ -3,20 +3,28 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: STEMPath Finder API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: opportunities
+    description: Public opportunity browsing
+  - name: match
+    description: Student matching
+  - name: admin
+    description: Admin management
+  - name: candidates
+    description: Candidate opportunity pipeline
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,429 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Public opportunities ──────────────────────────────────────────────────
+  /opportunities:
+    get:
+      operationId: listOpportunities
+      tags: [opportunities]
+      summary: List published opportunities
+      parameters:
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: stemField
+          in: query
+          schema: { type: string }
+        - name: format
+          in: query
+          schema: { type: string, enum: [remote, in-person, hybrid] }
+        - name: grade
+          in: query
+          schema: { type: integer }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of published opportunities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Opportunity"
+
+  /opportunities/{id}:
+    get:
+      operationId: getOpportunity
+      tags: [opportunities]
+      summary: Get a published opportunity by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Opportunity detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Match engine ──────────────────────────────────────────────────────────
+  /match:
+    post:
+      operationId: matchOpportunities
+      tags: [match]
+      summary: Match a student profile to ranked opportunities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentProfile"
+      responses:
+        "200":
+          description: Ranked match results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MatchResult"
+
+  # ── Admin auth ────────────────────────────────────────────────────────────
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/me:
+    get:
+      operationId: adminMe
+      tags: [admin]
+      summary: Check admin authentication status
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Admin opportunities ───────────────────────────────────────────────────
+  /admin/opportunities:
+    get:
+      operationId: listAdminOpportunities
+      tags: [admin]
+      summary: List all opportunities (admin)
+      parameters:
+        - name: published
+          in: query
+          schema: { type: boolean }
+        - name: verificationStatus
+          in: query
+          schema: { type: string }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: All opportunities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Opportunity"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createOpportunity
+      tags: [admin]
+      summary: Create a new opportunity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpportunityInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/opportunities/{id}:
+    get:
+      operationId: getAdminOpportunity
+      tags: [admin]
+      summary: Get any opportunity by ID (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Opportunity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateOpportunity
+      tags: [admin]
+      summary: Update an opportunity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpportunityUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteOpportunity
+      tags: [admin]
+      summary: Delete an opportunity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/opportunities/{id}/publish:
+    patch:
+      operationId: togglePublishOpportunity
+      tags: [admin]
+      summary: Publish or unpublish an opportunity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishToggleInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Admin candidates ──────────────────────────────────────────────────────
+  /admin/candidates:
+    get:
+      operationId: listCandidates
+      tags: [candidates]
+      summary: List all candidate opportunities (admin)
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Candidates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Candidate"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/candidates/{id}:
+    get:
+      operationId: getCandidate
+      tags: [candidates]
+      summary: Get a candidate by ID (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Candidate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/candidates/{id}/status:
+    patch:
+      operationId: updateCandidateStatus
+      tags: [candidates]
+      summary: Update candidate review status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CandidateStatusUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Candidate submission API (bearer token auth) ──────────────────────────
+  /candidates:
+    post:
+      operationId: submitCandidates
+      tags: [candidates]
+      summary: Submit one or more candidate opportunities (bearer token required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CandidateSubmission"
+      responses:
+        "201":
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CandidateSubmissionResult"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +462,335 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]
+
+    # ── Domain entities ──────────────────────────────────────────────────────
+    Opportunity:
+      type: object
+      properties:
+        id:              { type: integer }
+        name:            { type: string }
+        organization:    { type: string }
+        category:        { type: string }
+        stemField:       { type: string }
+        eligibleGrades:  { type: string }
+        minAge:          { type: ["integer", "null"] }
+        maxAge:          { type: ["integer", "null"] }
+        location:        { type: string }
+        format:          { type: string }
+        costCategory:    { type: string }
+        costAmount:      { type: ["string", "null"] }
+        deadline:        { type: ["string", "null"] }
+        applicationOpenDate: { type: ["string", "null"] }
+        experienceLevel: { type: string }
+        timeCommitment:  { type: string }
+        requirements:    { type: string }
+        officialUrl:     { type: string }
+        sourceUrls:      { type: string }
+        summary:         { type: string }
+        verificationStatus: { type: string }
+        published:       { type: boolean }
+        lastVerifiedDate: { type: ["string", "null"] }
+        isSampleData:    { type: boolean }
+        createdAt:       { type: string }
+        updatedAt:       { type: string }
+      required:
+        - id
+        - name
+        - organization
+        - category
+        - stemField
+        - eligibleGrades
+        - location
+        - format
+        - costCategory
+        - experienceLevel
+        - timeCommitment
+        - requirements
+        - officialUrl
+        - summary
+        - verificationStatus
+        - published
+        - isSampleData
+        - createdAt
+        - updatedAt
+
+    OpportunityInput:
+      type: object
+      properties:
+        name:            { type: string, minLength: 1 }
+        organization:    { type: string, minLength: 1 }
+        category:        { type: string }
+        stemField:       { type: string }
+        eligibleGrades:  { type: string }
+        minAge:          { type: ["integer", "null"] }
+        maxAge:          { type: ["integer", "null"] }
+        location:        { type: string }
+        format:          { type: string }
+        costCategory:    { type: string }
+        costAmount:      { type: ["string", "null"] }
+        deadline:        { type: ["string", "null"] }
+        applicationOpenDate: { type: ["string", "null"] }
+        experienceLevel: { type: string }
+        timeCommitment:  { type: string }
+        requirements:    { type: string }
+        officialUrl:     { type: string }
+        sourceUrls:      { type: string }
+        summary:         { type: string }
+        verificationStatus: { type: string }
+        published:       { type: boolean }
+        lastVerifiedDate: { type: ["string", "null"] }
+        isSampleData:    { type: boolean }
+      required:
+        - name
+        - organization
+        - category
+        - stemField
+        - eligibleGrades
+        - location
+        - format
+        - costCategory
+        - experienceLevel
+        - timeCommitment
+        - requirements
+        - officialUrl
+        - summary
+
+    OpportunityUpdate:
+      type: object
+      properties:
+        name:            { type: string }
+        organization:    { type: string }
+        category:        { type: string }
+        stemField:       { type: string }
+        eligibleGrades:  { type: string }
+        minAge:          { type: ["integer", "null"] }
+        maxAge:          { type: ["integer", "null"] }
+        location:        { type: string }
+        format:          { type: string }
+        costCategory:    { type: string }
+        costAmount:      { type: ["string", "null"] }
+        deadline:        { type: ["string", "null"] }
+        applicationOpenDate: { type: ["string", "null"] }
+        experienceLevel: { type: string }
+        timeCommitment:  { type: string }
+        requirements:    { type: string }
+        officialUrl:     { type: string }
+        sourceUrls:      { type: string }
+        summary:         { type: string }
+        verificationStatus: { type: string }
+        published:       { type: boolean }
+        lastVerifiedDate: { type: ["string", "null"] }
+        isSampleData:    { type: boolean }
+
+    PublishToggleInput:
+      type: object
+      properties:
+        published: { type: boolean }
+      required: [published]
+
+    Candidate:
+      type: object
+      properties:
+        id:              { type: integer }
+        name:            { type: string }
+        organization:    { type: string }
+        category:        { type: string }
+        stemField:       { type: string }
+        possibleGrades:  { type: string }
+        possibleAges:    { type: string }
+        location:        { type: string }
+        format:          { type: string }
+        possibleCost:    { type: string }
+        possibleDeadline: { type: ["string", "null"] }
+        requirements:    { type: string }
+        officialUrl:     { type: string }
+        sourceUrls:      { type: string }
+        summary:         { type: string }
+        dateDiscovered:  { type: string }
+        reviewStatus:    { type: string }
+        reviewNotes:     { type: ["string", "null"] }
+        createdAt:       { type: string }
+        updatedAt:       { type: string }
+      required:
+        - id
+        - name
+        - organization
+        - category
+        - stemField
+        - possibleGrades
+        - possibleAges
+        - location
+        - format
+        - possibleCost
+        - requirements
+        - officialUrl
+        - summary
+        - dateDiscovered
+        - reviewStatus
+        - createdAt
+        - updatedAt
+
+    CandidateStatusUpdate:
+      type: object
+      properties:
+        reviewStatus: { type: string }
+        reviewNotes:  { type: ["string", "null"] }
+      required: [reviewStatus]
+
+    CandidateInput:
+      type: object
+      properties:
+        name:            { type: string, minLength: 1 }
+        organization:    { type: string, minLength: 1 }
+        category:        { type: string }
+        stemField:       { type: string }
+        possibleGrades:  { type: string }
+        possibleAges:    { type: string }
+        location:        { type: string }
+        format:          { type: string }
+        possibleCost:    { type: string }
+        possibleDeadline: { type: ["string", "null"] }
+        requirements:    { type: string }
+        officialUrl:     { type: string, minLength: 1 }
+        sourceUrls:      { type: string }
+        summary:         { type: string }
+      required:
+        - name
+        - organization
+        - officialUrl
+        - summary
+
+    CandidateSubmission:
+      type: object
+      properties:
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/CandidateInput"
+          minItems: 1
+          maxItems: 20
+      required: [candidates]
+
+    CandidateSubmissionResult:
+      type: object
+      properties:
+        submitted:   { type: integer }
+        duplicates:  { type: integer }
+        errors:      { type: integer }
+        message:     { type: string }
+      required: [submitted, duplicates, errors, message]
+
+    # ── Match engine ─────────────────────────────────────────────────────────
+    StudentProfile:
+      type: object
+      properties:
+        grade:               { type: integer }
+        age:                 { type: integer }
+        stemInterest:        { type: string }
+        opportunityType:     { type: string }
+        locationPreference:  { type: string }
+        formatPreference:    { type: string }
+        costPreference:      { type: string }
+        experienceLevel:     { type: string }
+        timeCommitment:      { type: string }
+      required:
+        - grade
+        - age
+        - stemInterest
+        - opportunityType
+        - locationPreference
+        - formatPreference
+        - costPreference
+        - experienceLevel
+        - timeCommitment
+
+    ScoreBreakdown:
+      type: object
+      properties:
+        basicEligibility:    { type: integer }
+        stemInterest:        { type: integer }
+        opportunityType:     { type: integer }
+        locationFormat:      { type: integer }
+        costPreference:      { type: integer }
+        experienceLevel:     { type: integer }
+        timeCommitment:      { type: integer }
+        deadlineOpen:        { type: integer }
+        total:               { type: integer }
+      required:
+        - basicEligibility
+        - stemInterest
+        - opportunityType
+        - locationFormat
+        - costPreference
+        - experienceLevel
+        - timeCommitment
+        - deadlineOpen
+        - total
+
+    MatchResult:
+      type: object
+      properties:
+        opportunity:        { $ref: "#/components/schemas/Opportunity" }
+        score:              { type: integer }
+        scoreBreakdown:     { $ref: "#/components/schemas/ScoreBreakdown" }
+        eligibilityLabel:   { type: string }
+        deadlineLabel:      { type: string }
+        matchReasons:
+          type: array
+          items: { type: string }
+        nonMatchReasons:
+          type: array
+          items: { type: string }
+      required:
+        - opportunity
+        - score
+        - scoreBreakdown
+        - eligibilityLabel
+        - deadlineLabel
+        - matchReasons
+        - nonMatchReasons
+
+    # ── Admin ─────────────────────────────────────────────────────────────────
+    AdminLoginInput:
+      type: object
+      properties:
+        username: { type: string }
+        password: { type: string }
+      required: [username, password]
+
+    AdminSession:
+      type: object
+      properties:
+        authenticated: { type: boolean }
+        username:      { type: string }
+      required: [authenticated, username]
+
+    AdminStats:
+      type: object
+      properties:
+        totalOpportunities:    { type: integer }
+        publishedOpportunities: { type: integer }
+        verifiedOpportunities: { type: integer }
+        pendingCandidates:     { type: integer }
+        totalCandidates:       { type: integer }
+      required:
+        - totalOpportunities
+        - publishedOpportunities
+        - verifiedOpportunities
+        - pendingCandidates
+        - totalCandidates

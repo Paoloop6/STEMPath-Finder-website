@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "STEMPath Finder"
+version = "1.0.0"
+id = "artifacts/stempathfinder"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24471
+
+[services.development]
+run = "pnpm --filter @workspace/stempathfinder run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/stempathfinder", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/stempathfinder/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24471"
+BASE_PATH = "/"
