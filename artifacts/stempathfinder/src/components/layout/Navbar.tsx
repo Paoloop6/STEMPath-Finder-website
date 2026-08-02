@@ -22,9 +22,6 @@ export function Navbar() {
             <Link href="/" className={linkClass(location === '/')}>
               Home
             </Link>
-            <Link href="/match" className={linkClass(location === '/match' || location === '/results')}>
-              Find Opportunities
-            </Link>
           </div>
 
           <div className="sm:hidden">
@@ -42,9 +39,6 @@ export function Navbar() {
         <div className="sm:hidden border-t border-border px-4 py-3 space-y-3">
           <Link href="/" className={`block ${linkClass(location === '/')}`} onClick={() => setMobileOpen(false)}>
             Home
-          </Link>
-          <Link href="/match" className={`block ${linkClass(location === '/match' || location === '/results')}`} onClick={() => setMobileOpen(false)}>
-            Find Opportunities
           </Link>
         </div>
       )}

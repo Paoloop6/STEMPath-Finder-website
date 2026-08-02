@@ -27,4 +27,5 @@ export * from './opportunityUpdate';
 export * from './publishToggleInput';
 export * from './scoreBreakdown';
 export * from './studentProfile';
+export * from './studentProfileTier';
 export * from './successResponse';

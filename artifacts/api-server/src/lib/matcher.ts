@@ -32,6 +32,9 @@ export interface MatchResult {
   deadlineLabel: string;
   matchReasons: string[];
   nonMatchReasons: string[];
+  /** Written by the DeepSeek pass in deepseek-match.ts; null when it was skipped. */
+  aiReason?: string | null;
+  aiCaution?: string | null;
 }
 
 /** Returns "Eligible" | "Maybe Eligible" | "Not Eligible" | "Deadline Passed" */

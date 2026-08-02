@@ -189,6 +189,14 @@ export interface CandidateSubmissionResult {
   message: string;
 }
 
+export type StudentProfileTier = typeof StudentProfileTier[keyof typeof StudentProfileTier];
+
+
+export const StudentProfileTier = {
+  standard: 'standard',
+  pro: 'pro',
+} as const;
+
 export interface StudentProfile {
   grade: number;
   age: number;
@@ -199,6 +207,7 @@ export interface StudentProfile {
   costPreference: string;
   experienceLevel: string;
   timeCommitment: string;
+  tier?: StudentProfileTier;
 }
 
 export interface ScoreBreakdown {
@@ -221,6 +230,8 @@ export interface MatchResult {
   deadlineLabel: string;
   matchReasons: string[];
   nonMatchReasons: string[];
+  aiReason?: string | null;
+  aiCaution?: string | null;
 }
 
 export interface AdminLoginInput {

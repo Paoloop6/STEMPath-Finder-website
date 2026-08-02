@@ -107,7 +107,8 @@ export const MatchOpportunitiesBody = zod.object({
   "formatPreference": zod.string(),
   "costPreference": zod.string(),
   "experienceLevel": zod.string(),
-  "timeCommitment": zod.string()
+  "timeCommitment": zod.string(),
+  "tier": zod.enum(['standard', 'pro']).optional()
 })
 
 export const MatchOpportunitiesResponseItem = zod.object({
@@ -154,7 +155,9 @@ export const MatchOpportunitiesResponseItem = zod.object({
   "eligibilityLabel": zod.string(),
   "deadlineLabel": zod.string(),
   "matchReasons": zod.array(zod.string()),
-  "nonMatchReasons": zod.array(zod.string())
+  "nonMatchReasons": zod.array(zod.string()),
+  "aiReason": zod.string().nullish(),
+  "aiCaution": zod.string().nullish()
 })
 export const MatchOpportunitiesResponse = zod.array(MatchOpportunitiesResponseItem)
 

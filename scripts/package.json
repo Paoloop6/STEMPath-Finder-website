@@ -5,7 +5,15 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "test:aws-storage": "tsx --env-file=../.env ./test-aws-storage.ts",
+    "import:ecdatabase": "tsx --env-file=../.env ./import-ecdatabase-stem.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "anonymize:students": "tsx --env-file=../.env ./anonymize-student-profiles.ts",
+    "check:logos": "tsx --env-file=../.env ./check-university-logos.ts",
+    "test:opportunities": "tsx --env-file=../.env ./test-opportunity-feature.ts"
+  },
+  "dependencies": {
+    "@workspace/aws": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -5,6 +5,7 @@
  * STEMPath Finder API
  * OpenAPI spec version: 0.1.0
  */
+import type { StudentProfileTier } from './studentProfileTier';
 
 export interface StudentProfile {
   grade: number;
@@ -16,4 +17,5 @@ export interface StudentProfile {
   costPreference: string;
   experienceLevel: string;
   timeCommitment: string;
+  tier?: StudentProfileTier;
 }

@@ -16,4 +16,6 @@ export interface MatchResult {
   deadlineLabel: string;
   matchReasons: string[];
   nonMatchReasons: string[];
+  aiReason?: string | null;
+  aiCaution?: string | null;
 }

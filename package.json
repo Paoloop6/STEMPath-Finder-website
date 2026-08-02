@@ -6,7 +6,16 @@
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "test:deepseek": "node --env-file=.env scripts/test-deepseek.mjs",
+    "test:aws-storage": "pnpm --filter @workspace/scripts run test:aws-storage",
+    "import:ecdatabase": "pnpm --filter @workspace/scripts run import:ecdatabase",
+    "anonymize:students": "pnpm --filter @workspace/scripts run anonymize:students",
+    "check:logos": "pnpm --filter @workspace/scripts run check:logos",
+    "lambda:build": "pnpm --filter @workspace/lambda-opportunities run build",
+    "lambda:deploy": "pnpm --filter @workspace/lambda-opportunities run deploy",
+    "lambda:invoke:test": "pnpm --filter @workspace/lambda-opportunities run test:invoke",
+    "test:opportunities": "pnpm --filter @workspace/scripts run test:opportunities"
   },
   "private": true,
   "dependencies": {

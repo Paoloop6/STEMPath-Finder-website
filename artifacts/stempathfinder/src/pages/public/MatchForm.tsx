@@ -17,6 +17,13 @@ import { z } from "zod";
 import { useStudentProfile } from "@/hooks/use-profile";
 import { useMatchOpportunities } from "@workspace/api-client-react";
 import { Loader2 } from "lucide-react";
+import {
+  DEFAULT_SEARCH_TIER,
+  SEARCH_TIERS,
+  SEARCH_TIER_HINTS,
+  SEARCH_TIER_LABELS,
+  type SearchTier,
+} from "@/lib/search-tier";
 
 const profileSchema = z.object({
   grade: z.coerce.number().min(6).max(12),
@@ -28,6 +35,7 @@ const profileSchema = z.object({
   costPreference: z.string().min(1, "Required"),
   experienceLevel: z.string().min(1, "Required"),
   timeCommitment: z.string().min(1, "Required"),
+  tier: z.enum(SEARCH_TIERS).default(DEFAULT_SEARCH_TIER),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -65,10 +73,12 @@ export default function MatchForm() {
       costPreference: "Any",
       experienceLevel: "Beginner",
       timeCommitment: "Flexible",
+      tier: DEFAULT_SEARCH_TIER,
     },
   });
 
   const formatPref = watch("formatPreference");
+  const tier = watch("tier");
 
   const onSubmit = (data: ProfileFormValues) => {
     setProfile(data);
@@ -240,6 +250,29 @@ export default function MatchForm() {
               <Input placeholder="e.g. San Francisco, CA" {...register("locationPreference")} />
             </Field>
           )}
+
+          <Field label="Search depth" error={errors.tier?.message}>
+            <Controller
+              name="tier"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  onValueChange={(v) => field.onChange(v as SearchTier)}
+                  defaultValue={field.value}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SEARCH_TIERS.map((t) => (
+                      <SelectItem key={t} value={t}>{SEARCH_TIER_LABELS[t]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <p className="text-xs text-muted-foreground">{SEARCH_TIER_HINTS[tier]}</p>
+          </Field>
 
           <div className="pt-2">
             <button

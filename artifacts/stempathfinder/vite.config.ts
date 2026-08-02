@@ -56,6 +56,17 @@ export default defineConfig({
         '..',
         'attached_assets',
       ),
+      // The ranking system's single source of truth, shared with the Supabase
+      // edge functions — the leaderboard runs the same code the server runs.
+      '@ranking': path.resolve(
+        import.meta.dirname,
+        '..',
+        '..',
+        'supabase',
+        'functions',
+        '_shared',
+        'ranking.ts',
+      ),
     },
     dedupe: ['react', 'react-dom'],
   },
@@ -69,6 +80,9 @@ export default defineConfig({
     strictPort: true,
     host: '0.0.0.0',
     allowedHosts: true,
+    proxy: {
+      '/api': 'http://localhost:8080',
+    },
     fs: {
       strict: true,
     },

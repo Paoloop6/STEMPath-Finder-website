@@ -2,12 +2,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
-import { Route, Switch, Router as WouterRouter } from 'wouter';
+import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 
 import Home from '@/pages/public/Home';
+import FindMatches from '@/pages/public/FindMatches';
+import DatabasePage from '@/pages/public/DatabasePage';
+import HowItWorksPage from '@/pages/public/HowItWorksPage';
+import DifferencePage from '@/pages/public/DifferencePage';
+import Documentation from '@/pages/public/Documentation';
 import MatchForm from '@/pages/public/MatchForm';
 import Results from '@/pages/public/Results';
 import OpportunityDetail from '@/pages/public/OpportunityDetail';
+import StudentPathways from '@/pages/public/StudentPathways';
 
 import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
@@ -15,17 +22,42 @@ import AdminOpportunities from '@/pages/admin/AdminOpportunities';
 import AdminOpportunityForm from '@/pages/admin/AdminOpportunityForm';
 import AdminCandidates from '@/pages/admin/AdminCandidates';
 import AdminCandidateDetail from '@/pages/admin/AdminCandidateDetail';
+import AdminPathways from '@/pages/admin/AdminPathways';
 
 const queryClient = new QueryClient();
+
+/** Public pages share one persistent shell (background + liquid-glass top bar);
+ * only the inner content is keyed by location, so it replays the page-enter
+ * transition on every navigation without resetting the flow-field canvas. */
+function PublicShell() {
+  const [location] = useLocation();
+  return (
+    <PublicLayout>
+      <div key={location} className="page-enter">
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/find" component={FindMatches} />
+          <Route path="/database" component={DatabasePage} />
+          <Route path="/student-pathways" component={StudentPathways} />
+          <Route path="/how" component={HowItWorksPage} />
+          <Route path="/different" component={DifferencePage} />
+          <Route path="/docs" component={Documentation} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
+    </PublicLayout>
+  );
+}
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      {/* Legacy public pages with their own layouts */}
       <Route path="/match" component={MatchForm} />
       <Route path="/results" component={Results} />
       <Route path="/opportunities/:id" component={OpportunityDetail} />
 
+      {/* Admin — separate layout, no public shell */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/opportunities" component={AdminOpportunities} />
@@ -33,8 +65,10 @@ function Router() {
       <Route path="/admin/opportunities/:id/edit" component={AdminOpportunityForm} />
       <Route path="/admin/candidates" component={AdminCandidates} />
       <Route path="/admin/candidates/:id" component={AdminCandidateDetail} />
+      <Route path="/admin/pathways" component={AdminPathways} />
 
-      <Route component={NotFound} />
+      {/* Everything else → shared public shell with page transitions */}
+      <Route component={PublicShell} />
     </Switch>
   );
 }

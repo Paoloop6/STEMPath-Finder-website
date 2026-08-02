@@ -708,6 +708,11 @@ components:
         costPreference:      { type: string }
         experienceLevel:     { type: string }
         timeCommitment:      { type: string }
+        # Search depth. Optional: omitted means the server default tier.
+        # Names a tier, never a model id, so a client can never pick the model.
+        tier:
+          type: string
+          enum: [standard, pro]
       required:
         - grade
         - age
@@ -756,6 +761,10 @@ components:
         nonMatchReasons:
           type: array
           items: { type: string }
+        # Written by the tier's DeepSeek pass. Null whenever that pass was
+        # skipped or failed — the deterministic score above still stands.
+        aiReason:    { type: string, nullable: true }
+        aiCaution:   { type: string, nullable: true }
       required:
         - opportunity
         - score

@@ -80,7 +80,7 @@ export default function Results() {
 }
 
 function ResultRow({ result, rank }: { result: MatchResult; rank: number }) {
-  const { opportunity, score, eligibilityLabel, deadlineLabel } = result;
+  const { opportunity, score, eligibilityLabel, deadlineLabel, aiReason, aiCaution } = result;
 
   const eligibilityColor =
     eligibilityLabel === "Eligible"
@@ -104,6 +104,9 @@ function ResultRow({ result, rank }: { result: MatchResult; rank: number }) {
         <div className="text-sm text-muted-foreground">
           {opportunity.organization} · Grades {opportunity.eligibleGrades} · {opportunity.category}
         </div>
+        {/* Present only when the search-depth pass ran and succeeded. */}
+        {aiReason && <p className="mt-1 text-sm text-foreground/80">{aiReason}</p>}
+        {aiCaution && <p className="mt-0.5 text-sm text-amber-700">Heads up: {aiCaution}</p>}
       </div>
 
       <div className="hidden sm:flex flex-col items-end flex-shrink-0 text-sm gap-0.5">
