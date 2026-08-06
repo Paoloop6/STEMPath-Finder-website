@@ -416,33 +416,43 @@ internal `reviewStatus`, and any structured requirements list.
 | 18 | Dead `href="#"` footer links | Low | **Open** |
 | 19 | Admin password compared with `!==` | Security | **Owner action** |
 | 20 | Permissive CORS with credentials | Security | **Owner action** |
-| 21 | Opportunity detail pages client-rendered | **High** | **Open** — see below |
-| 22 | Fake opportunity IDs return 200 | **High** | **Open** — see below |
+| 21 | Opportunity detail pages client-rendered | High | Fixed — generated at build time |
+| 22 | Fake opportunity IDs return 200 | High | Fixed — real 404 |
 | 23 | No About / Methodology / Contact pages | Medium | **Open** — `/how` partly covers methodology |
 
-### 21–22: opportunity detail pages — the largest remaining gap
+### 21–22: opportunity detail pages — how they were fixed
 
-The 88 published opportunity pages are **not** prerendered. They are rewritten
-to `app.html`, a neutral shell with no body copy and no canonical, so React
-supplies everything at runtime. A non-rendering crawler sees an empty page, and
-`/opportunities/any-fake-id` still returns HTTP 200.
+All 88 published opportunity pages are now written as real HTML files by
+`scripts/prerender.mjs`, which fetches them from the live API at build time.
+Each page carries a unique title, a per-record meta description, canonical, H1,
+organization, summary, eligibility, location, deadline, cost or compensation,
+and the official source link — all present before any JavaScript runs.
 
-This was left undone deliberately rather than rushed: it needs a server-side
-render, and the existing Express serverless app has no HTML rendering path at
-all. The implementation shape is:
+Fields that are null or empty on the record are **omitted entirely** rather than
+given a placeholder. No verification date, employment status or program dates
+are shown, because the records do not contain them. Structured data is limited
+to `BreadcrumbList` and `WebPage`, whose every property is visible on the page.
 
-1. Add a route to `artifacts/api-server` that handles `/opportunities/:id`.
-2. Call the existing `findOpportunityByAnyId`. If it returns `undefined`,
-   respond **404** with `404.html` — this alone fixes finding 22.
-3. Otherwise inject `<title>`, description, canonical, OG tags and the
-   record's visible fields into the shell before responding 200.
-4. Point the `/opportunities/(.*)` rewrite at that function instead of
-   `app.html`.
+The 404 behaviour follows from the file layout rather than from any runtime
+check: removing the `/opportunities/(.*)` rewrite means an id with no generated
+file matches nothing and Vercel answers with `404.html` and a real HTTP 404.
+That covers missing, unpublished, rejected and expired ids identically.
 
-Note the trap that bit this pass: `app.html` exists precisely because rewriting
-these routes to `index.html` served the prerendered **homepage** — its H1, its
-copy, its canonical — to all 88 URLs. Whatever replaces it must not reintroduce
-a canonical that points somewhere else.
+Two consequences worth knowing:
+
+- **The build now depends on the API.** If `/api/opportunities` errors or
+  returns zero records, the build fails deliberately rather than shipping a
+  sitemap with all 88 detail pages silently dropped.
+- **Pages are as fresh as the last deploy.** A record unpublished after a build
+  keeps its file until the next one. Stats at the time of writing:
+  115 published, 88 active, 27 expired, 50 pending review. The 27 expired
+  published records are excluded from generation and now return 404 — correct
+  under Google's guidance for removed content, but a change from the previous
+  behaviour of rendering them.
+
+The trap to avoid if this is ever moved to runtime SSR: `app.html` exists
+because rewriting these routes to `index.html` served the prerendered
+**homepage** — its H1, its copy, its `canonical="/"` — to all 88 URLs.
 
 ---
 
