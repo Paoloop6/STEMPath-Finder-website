@@ -278,6 +278,143 @@ for (const page of BROWSE_PAGES) {
   });
 }
 
+// --- Published opportunity detail pages -----------------------------------
+// Fetched from the live API at build time and written as real files, so each
+// published record has meaningful HTML before any JavaScript runs, and any id
+// that is missing, unpublished or expired simply has no file — which means
+// Vercel answers it with 404.html and a real HTTP 404.
+//
+// Only fields the record actually carries are rendered. Nothing is inferred,
+// defaulted or invented: no verification dates, no employment status, no
+// program dates, and no structured data beyond what is visibly on the page.
+const API_BASE = process.env.PRERENDER_API_BASE || ORIGIN;
+
+let published = [];
+{
+  const url = `${API_BASE}/api/opportunities`;
+  const response = await fetch(url, { headers: { accept: 'application/json' } });
+  if (!response.ok) {
+    throw new Error(
+      `[prerender] ${url} returned ${response.status}. Refusing to build: a ` +
+        `partial fetch would silently drop opportunity pages and shrink sitemap.xml.`,
+    );
+  }
+  const payload = await response.json();
+  const all = Array.isArray(payload.opportunities) ? payload.opportunities : [];
+  if (all.length === 0) {
+    throw new Error(
+      '[prerender] the API returned zero opportunities. Refusing to build ' +
+        'rather than deploying a sitemap that drops every detail page.',
+    );
+  }
+  // The endpoint already excludes unpublished, rejected, invalid and expired
+  // records. Re-checking published here means a change to that endpoint cannot
+  // silently start publishing pages for records that are not public.
+  published = all.filter(
+    (o) => o.published === true && o.invalid !== true && o.reviewStatus !== 'rejected',
+  );
+  console.log(
+    `[prerender] ${published.length} published of ${all.length} returned`,
+  );
+}
+
+/** Non-empty, non-null string, else null. Never substitutes a placeholder. */
+const field = (v) => {
+  if (v === null || v === undefined) return null;
+  const s = String(v).trim();
+  return s && s.toLowerCase() !== 'null' ? s : null;
+};
+
+const detailRow = (label, value) =>
+  value
+    ? `<div class="mt-3"><dt class="text-[13px] uppercase tracking-[0.12em] text-muted-foreground">${escapeHtml(label)}</dt><dd class="mt-1 text-[15px] leading-[1.6] text-foreground">${escapeHtml(value)}</dd></div>`
+    : '';
+
+for (const o of published) {
+  const title = field(o.title) ?? 'Opportunity';
+  const routePath = seo.opportunityPath(title, o.numericId || o.opportunityId);
+  const org = field(o.organization);
+  const type = field(o.opportunityType);
+  const location = field(o.location);
+  const deadline = field(o.deadline);
+  const cost = field(o.cost);
+  const compensation = field(o.compensation);
+  const description = field(o.description);
+  const eligibility = field(o.eligibility);
+  const officialUrl = field(o.officialUrl) ?? field(o.applicationUrl);
+  const grades = Array.isArray(o.gradeLevels) && o.gradeLevels.length
+    ? o.gradeLevels.join(', ')
+    : null;
+  const remote =
+    o.remoteStatus && o.remoteStatus !== 'unknown' ? String(o.remoteStatus) : null;
+
+  // Built from this record's own fields, so it differs per page rather than
+  // repeating one boilerplate sentence across every opportunity.
+  const metaBits = [
+    type && org ? `${type} from ${org}` : type || (org ? `Run by ${org}` : null),
+    location,
+    grades ? `grades ${grades}` : null,
+    deadline ? `deadline ${deadline}` : null,
+  ].filter(Boolean);
+  const description_meta = `${title}. ${metaBits.join('. ')}.`.slice(0, 320);
+
+  const body =
+    h1(title) +
+    (org
+      ? `<p class="mt-2 text-[17px] text-[var(--brand-muted-1)]">${escapeHtml(org)}</p>`
+      : '') +
+    (description
+      ? `<h2 class="font-display mt-8 text-[20px] font-semibold text-foreground">Program overview</h2>${p(description)}`
+      : '') +
+    (eligibility
+      ? `<h2 class="font-display mt-8 text-[20px] font-semibold text-foreground">Eligibility</h2>${p(eligibility)}`
+      : '') +
+    '<h2 class="font-display mt-8 text-[20px] font-semibold text-foreground">Key details</h2>' +
+    '<dl class="mt-2">' +
+    detailRow('Organization', org) +
+    detailRow('Type', type) +
+    detailRow('Location', location) +
+    detailRow('Format', remote) +
+    detailRow('Eligible grades', grades) +
+    detailRow('Application deadline', deadline) +
+    detailRow('Cost', cost) +
+    detailRow('Compensation', compensation) +
+    detailRow('Time commitment', field(o.timeCommitment)) +
+    detailRow('Application status', field(o.applicationStatus)) +
+    '</dl>' +
+    (officialUrl
+      ? `<h2 class="font-display mt-8 text-[20px] font-semibold text-foreground">How to apply</h2>` +
+        `<p class="mt-3 text-[15px] leading-[1.7] text-[var(--brand-muted-1)]">Apply on the program's own site. Details here were read from that page and can change — confirm them there before applying.</p>` +
+        `<p class="mt-3"><a class="text-primary underline-offset-4 hover:underline" href="${escapeHtml(officialUrl)}" rel="noreferrer noopener">Official program page</a></p>`
+      : '') +
+    linkList([
+      ['Browse all opportunities', '/database'],
+      ['STEM Path Finder', '/stem-path-finder'],
+      ['Guides', '/guides'],
+    ]);
+
+  routes.push({
+    path: routePath,
+    title,
+    description: description_meta,
+    // lastmod only where the record genuinely records a content change.
+    lastmod: field(o.updatedAt)?.slice(0, 10) ?? null,
+    jsonLd: [
+      breadcrumbJsonLd([title], routePath),
+      // WebPage only. Every property below is visible on the page above.
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: title,
+        url: `${ORIGIN}${routePath}`,
+        ...(description ? { description } : {}),
+        isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: `${ORIGIN}/` },
+      },
+    ],
+    body,
+  });
+}
+
 // --- Render ---------------------------------------------------------------
 const template = await readFile(path.join(DIST, 'index.html'), 'utf8');
 
@@ -393,10 +530,14 @@ const sitemap =
   '<?xml version="1.0" encoding="UTF-8"?>\n' +
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
   indexable
-    .map(
-      (r) =>
-        `  <url><loc>${escapeHtml(`${ORIGIN}${r.path === '/' ? '/' : r.path}`)}</loc></url>`,
-    )
+    .map((r) => {
+      const loc = escapeHtml(`${ORIGIN}${r.path === '/' ? '/' : r.path}`);
+      // lastmod is emitted only where a record genuinely tracks content
+      // changes. Static pages have no such timestamp, so they carry none
+      // rather than a build date that would claim a change that never happened.
+      const lastmod = r.lastmod ? `<lastmod>${r.lastmod}</lastmod>` : '';
+      return `  <url><loc>${loc}</loc>${lastmod}</url>`;
+    })
     .join('\n') +
   '\n</urlset>\n';
 await writeFile(path.join(DIST, 'sitemap.xml'), sitemap, 'utf8');

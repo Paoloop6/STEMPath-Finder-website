@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { MatchResult } from "@workspace/api-client-react";
 import { Seo } from "@/components/Seo";
+import { opportunityPath } from "@/lib/seo";
 
 export default function Results() {
   const [, setLocation] = useLocation();
@@ -125,7 +126,8 @@ function ResultRow({ result, rank }: { result: MatchResult; rank: number }) {
       </div>
 
       <Link
-        href={`/opportunities/${opportunity.id}`}
+        // Canonical slug path — a bare-id URL has no prerendered file and now 404s.
+        href={opportunityPath(opportunity.name, opportunity.id)}
         className="flex-shrink-0 text-sm text-primary underline-offset-4 hover:underline"
       >
         View

@@ -15,10 +15,6 @@
       "destination": "/api"
     },
     {
-      "source": "/opportunities/(.*)",
-      "destination": "/app.html"
-    },
-    {
       "source": "/admin",
       "destination": "/app.html"
     },
