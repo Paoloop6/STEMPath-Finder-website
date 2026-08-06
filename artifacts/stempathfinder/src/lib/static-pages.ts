@@ -21,3 +21,13 @@ export const DIFFERENCE_INTRO: string[] = [
   "Ask a general chatbot for STEM programs and it will produce a fluent, plausible list. Some of it will be real. Some of it will be a program that closed years ago, a deadline that was never true, or a link that goes nowhere — presented with exactly the same confidence as the accurate entries.",
   "This database works the other way round. Nothing is generated: every field traces back to a page on the program's own site, and when a detail is missing from that page it is left blank rather than filled in with a guess. That makes the listings less complete than an invented answer, and more trustworthy than one.",
 ];
+
+/**
+ * Homepage hero copy. Shared with the prerenderer so the H1 and lead paragraph
+ * are in the served HTML, not only after hydration. HomeSections.tsx renders
+ * these same constants — do not fork the strings.
+ */
+export const HOME_H1 = "Find the STEM path that's actually yours.";
+
+export const HOME_LEAD =
+  "A researched database of real STEM opportunities for grades 6–12 — competitions, research, internships, camps, scholarships — matched to you, not generated on the spot.";

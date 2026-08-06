@@ -121,6 +121,16 @@ routes.push({
       logo: `${ORIGIN}/icon-512.png`,
     },
   ],
+  body:
+    h1(sp.HOME_H1) +
+    p(sp.HOME_LEAD) +
+    linkList([
+      ['Find your matches', '/find'],
+      ['STEM Path Finder', '/stem-path-finder'],
+      ['Browse the database', '/database'],
+      ['Guides', '/guides'],
+      ['How it works', '/how'],
+    ]),
 });
 routes.push({
   path: '/find',

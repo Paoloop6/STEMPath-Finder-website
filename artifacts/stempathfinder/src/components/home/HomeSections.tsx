@@ -6,6 +6,7 @@ import { DONUT_COLORS, DonutLegend, ScoreDonut } from '@/components/ScoreDonut';
 import type { ChatTurn } from '@/components/chat/MessageBubble';
 import type { OpportunityMatch } from '@/lib/ask-stempath';
 import { opportunityPath } from '@/lib/seo';
+import { HOME_H1, HOME_LEAD } from '@/lib/static-pages';
 
 /** Subtle on-scroll reveal. */
 export function Reveal({ children, className }: { children: ReactNode; className?: string }) {
@@ -572,11 +573,10 @@ export function HomeHero() {
           Researched before you arrive
         </span>
         <h1 className="font-display mx-auto mt-5 max-w-[820px] text-[42px] font-[680] leading-[0.98] tracking-[-0.04em] text-foreground sm:text-[68px] lg:text-[80px]">
-          Find the STEM path that&apos;s actually yours.
+          {HOME_H1}
         </h1>
         <p className="mx-auto mt-6 max-w-[600px] text-[17px] leading-[1.6] text-[var(--brand-muted-1)]">
-          A researched database of real STEM opportunities for grades 6–12 — competitions, research,
-          internships, camps, scholarships — matched to you, not generated on the spot.
+          {HOME_LEAD}
         </p>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
           <Link
