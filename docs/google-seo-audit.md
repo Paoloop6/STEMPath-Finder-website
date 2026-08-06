@@ -409,13 +409,40 @@ internal `reviewStatus`, and any structured requirements list.
 | 11 | 701 KB single bundle | Medium | Fixed — route-level code splitting |
 | 12 | Relative `og:image` | Medium | Fixed — absolute |
 | 13 | Trailing-slash duplicates | Medium | Fixed — redirect |
-| 14 | Empty browse pages stay indexable | Medium | Open — needs runtime data |
-| 15 | Thin browse-page prose (~25 words) | Medium | Partially fixed |
+| 14 | Empty browse pages stay indexable | Medium | **Open** — needs runtime data |
+| 15 | Thin browse-page prose (~25 words) | Medium | **Partially fixed** — prose unchanged; two worst duplicates noindexed |
 | 16 | Apex domain does not resolve | Medium | **Owner action — DNS** |
 | 17 | `lastCheckedAt` as `lastmod` | Low | Fixed — `updatedAt` only |
-| 18 | Dead `href="#"` footer links | Low | Open |
+| 18 | Dead `href="#"` footer links | Low | **Open** |
 | 19 | Admin password compared with `!==` | Security | **Owner action** |
 | 20 | Permissive CORS with credentials | Security | **Owner action** |
+| 21 | Opportunity detail pages client-rendered | **High** | **Open** — see below |
+| 22 | Fake opportunity IDs return 200 | **High** | **Open** — see below |
+| 23 | No About / Methodology / Contact pages | Medium | **Open** — `/how` partly covers methodology |
+
+### 21–22: opportunity detail pages — the largest remaining gap
+
+The 88 published opportunity pages are **not** prerendered. They are rewritten
+to `app.html`, a neutral shell with no body copy and no canonical, so React
+supplies everything at runtime. A non-rendering crawler sees an empty page, and
+`/opportunities/any-fake-id` still returns HTTP 200.
+
+This was left undone deliberately rather than rushed: it needs a server-side
+render, and the existing Express serverless app has no HTML rendering path at
+all. The implementation shape is:
+
+1. Add a route to `artifacts/api-server` that handles `/opportunities/:id`.
+2. Call the existing `findOpportunityByAnyId`. If it returns `undefined`,
+   respond **404** with `404.html` — this alone fixes finding 22.
+3. Otherwise inject `<title>`, description, canonical, OG tags and the
+   record's visible fields into the shell before responding 200.
+4. Point the `/opportunities/(.*)` rewrite at that function instead of
+   `app.html`.
+
+Note the trap that bit this pass: `app.html` exists precisely because rewriting
+these routes to `index.html` served the prerendered **homepage** — its H1, its
+copy, its canonical — to all 88 URLs. Whatever replaces it must not reintroduce
+a canonical that points somewhere else.
 
 ---
 
