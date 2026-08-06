@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Static sitemap served as a real file so /sitemap.xml returns XML rather than
-  falling through the SPA rewrite in vercel.json to index.html.
-
-  Published public pages only. Deliberately excluded: /admin/*, /api/*,
-  /admin/login, and the noindex pages /docs, /match, /results.
-  Individual published opportunity pages are covered by the database-driven
-  sitemap at /api/sitemap.xml, which robots.txt also advertises.
-
-  Keep in sync with BROWSE_PAGES in src/lib/browse-pages.ts, GUIDES in
-  src/lib/guides.ts, and STATIC_PATHS in
-  artifacts/api-server/src/routes/sitemap.ts.
--->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!--
+    Static sitemap served as a real file so /sitemap.xml returns XML rather
+    than falling through the SPA rewrite in vercel.json to index.html.
+
+    Published public pages only. Deliberately excluded: /admin/*, /api/*,
+    /admin/login, and the noindex pages /docs, /match, /results.
+    Individual published opportunity pages are covered by the database-driven
+    sitemap at /api/sitemap.xml, which robots.txt also advertises.
+
+    Keep in sync with BROWSE_PAGES in src/lib/browse-pages.ts, GUIDES in
+    src/lib/guides.ts, and STATIC_PATHS in
+    artifacts/api-server/src/routes/sitemap.ts.
+
+    The declaration and urlset element must remain the first two lines.
+  -->
 
   <!-- Core pages -->
   <url><loc>https://www.nextstepdatabase.fyi/</loc><priority>1.0</priority></url>
