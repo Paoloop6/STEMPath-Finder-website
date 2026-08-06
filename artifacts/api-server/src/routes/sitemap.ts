@@ -40,44 +40,6 @@ function baseUrl(req: Request): string {
   return host ? `${proto}://${host}` : "";
 }
 
-/** Static public pages; keep in sync with the frontend's routes. */
-const STATIC_PATHS = [
-  "/",
-  "/find",
-  "/database",
-  "/student-pathways",
-  "/how",
-  "/different",
-  "/guides",
-  "/guides/summer-internships-for-high-school-students",
-  "/guides/stem-opportunities-with-no-experience",
-  "/guides/houston-summer-programs",
-  "/guides/how-to-apply-for-a-high-school-internship",
-  "/guides/when-to-apply-for-summer-programs",
-  "/guides/free-stem-programs-for-high-school-students",
-  "/summer-internships",
-  "/high-school-internships",
-  "/stem-internships",
-  "/research-programs",
-  "/computer-science-opportunities",
-  "/engineering-opportunities",
-  "/medical-opportunities",
-  "/robotics-opportunities",
-  "/science-competitions",
-  "/volunteer-opportunities",
-  "/paid-internships",
-  "/free-summer-programs",
-  "/locations/houston",
-  "/locations/texas",
-  "/locations/remote",
-  "/locations/united-states",
-  "/opportunities-for-9th-graders",
-  "/opportunities-for-10th-graders",
-  "/opportunities-for-11th-graders",
-  "/opportunities-for-12th-graders",
-  "/opportunities-for-teens",
-];
-
 function escapeXml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -98,13 +60,17 @@ router.get("/sitemap.xml", async (req, res): Promise<void> => {
     // Active (non-expired, published) opportunities only.
     const records = await listOpportunities({});
 
+    // Static public pages live in the prerendered /sitemap.xml, which is
+    // generated from the same route list that produces their HTML. This
+    // sitemap covers only the database-driven opportunity pages, so the two
+    // are complementary rather than duplicates.
     const entries: string[] = [];
-    for (const path of STATIC_PATHS) {
-      entries.push(`  <url><loc>${escapeXml(`${base}${path}`)}</loc></url>`);
-    }
     for (const record of records) {
-      const lastmod =
-        record.updatedAt ?? record.lastCheckedAt ?? record.createdAt;
+      // Only updatedAt is a truthful <lastmod>: it is bumped solely when the
+      // extracted content changed. lastCheckedAt is bumped on every
+      // verification run even when nothing changed, so using it would report
+      // modification dates that never happened.
+      const lastmod = record.updatedAt;
       const lastmodTag =
         lastmod && !Number.isNaN(Date.parse(lastmod))
           ? `<lastmod>${new Date(lastmod).toISOString().slice(0, 10)}</lastmod>`

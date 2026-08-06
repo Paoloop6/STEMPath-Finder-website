@@ -6,13 +6,20 @@
  * domain can be pinned with VITE_SITE_URL if needed.
  */
 
-export const SITE_NAME = "STEMPath Finder";
+export const SITE_NAME = "NextStep Database";
+
+/**
+ * Canonical production origin. Hardcoded so canonical/OG URLs are identical in
+ * the prerendered HTML and after hydration, and so preview deployments cannot
+ * self-canonicalise and compete with production.
+ */
+export const SITE_ORIGIN = "https://www.nextstepdatabase.fyi";
 
 export const DEFAULT_TITLE =
-  "STEMPath Finder | Summer Internships and STEM Programs for High School Students";
+  "NextStep Database | STEM Opportunities for Students";
 
 export const DEFAULT_DESCRIPTION =
-  "Discover summer internships, research programs, competitions, volunteering, and STEM opportunities for high school students.";
+  "Find verified STEM internships, research programs, volunteering, robotics, competitions, and summer opportunities for middle and high school students.";
 
 export const DEFAULT_OG_IMAGE = "/icon-512.png";
 
@@ -20,8 +27,7 @@ export const DEFAULT_OG_IMAGE = "/icon-512.png";
 export function siteOrigin(): string {
   const configured = import.meta.env.VITE_SITE_URL as string | undefined;
   if (configured) return configured.replace(/\/$/, "");
-  if (typeof window !== "undefined") return window.location.origin;
-  return "";
+  return SITE_ORIGIN;
 }
 
 /** Absolute URL for a site path ("/opportunities/…"). */

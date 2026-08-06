@@ -3,14 +3,17 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @workspace/stempathfinder run build && node artifacts/api-server/build-serverless.mjs",
   "outputDirectory": "artifacts/stempathfinder/dist/public",
+  "trailingSlash": false,
   "functions": {
     "api/index.mjs": { "maxDuration": 60 }
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
-    {
-      "source": "/((?!api/|assets/|university-logos/|robots\\.txt|sitemap).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/opportunities/(.*)", "destination": "/index.html" },
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/admin/(.*)", "destination": "/index.html" },
+    { "source": "/match", "destination": "/index.html" },
+    { "source": "/results", "destination": "/index.html" },
+    { "source": "/docs", "destination": "/index.html" }
   ]
 }

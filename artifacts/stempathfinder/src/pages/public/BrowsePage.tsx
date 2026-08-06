@@ -40,6 +40,7 @@ export default function BrowsePageView({ path }: { path: string }) {
         title={page.title}
         description={page.description}
         path={page.path}
+        robots={page.noindex ? "noindex, follow" : "index, follow"}
         jsonLd={[breadcrumbJsonLd(crumbs, page.path)]}
       />
       <Breadcrumbs crumbs={crumbs} />

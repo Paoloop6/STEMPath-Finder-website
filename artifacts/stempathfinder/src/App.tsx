@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from '@/components/ui/toaster';
@@ -18,15 +19,17 @@ import OpportunityDetail from '@/pages/public/OpportunityDetail';
 import StudentPathways from '@/pages/public/StudentPathways';
 import BrowsePageView from '@/pages/public/BrowsePage';
 import GuidePage, { GuidesIndex } from '@/pages/public/GuidePage';
+import StemPathFinder from '@/pages/public/StemPathFinder';
 import { BROWSE_PAGES } from '@/lib/browse-pages';
 
-import AdminLogin from '@/pages/admin/AdminLogin';
-import AdminDashboard from '@/pages/admin/AdminDashboard';
-import AdminOpportunities from '@/pages/admin/AdminOpportunities';
-import AdminOpportunityForm from '@/pages/admin/AdminOpportunityForm';
-import AdminCandidates from '@/pages/admin/AdminCandidates';
-import AdminCandidateDetail from '@/pages/admin/AdminCandidateDetail';
-import AdminPathways from '@/pages/admin/AdminPathways';
+// Admin is lazy so its bundle is never downloaded by public visitors.
+const AdminLogin = lazy(() => import('@/pages/admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const AdminOpportunities = lazy(() => import('@/pages/admin/AdminOpportunities'));
+const AdminOpportunityForm = lazy(() => import('@/pages/admin/AdminOpportunityForm'));
+const AdminCandidates = lazy(() => import('@/pages/admin/AdminCandidates'));
+const AdminCandidateDetail = lazy(() => import('@/pages/admin/AdminCandidateDetail'));
+const AdminPathways = lazy(() => import('@/pages/admin/AdminPathways'));
 
 const queryClient = new QueryClient();
 
@@ -45,6 +48,7 @@ function PublicShell() {
           <Route path="/student-pathways" component={StudentPathways} />
           <Route path="/how" component={HowItWorksPage} />
           <Route path="/different" component={DifferencePage} />
+          <Route path="/stem-path-finder" component={StemPathFinder} />
           <Route path="/docs" component={Documentation} />
           {/* Indexable category, location, and grade pages (config-driven). */}
           {BROWSE_PAGES.map((page) => (
@@ -63,13 +67,15 @@ function PublicShell() {
 
 function Router() {
   return (
-    <Switch>
+    <Suspense fallback={null}>
+      <Switch>
       {/* Legacy public pages with their own layouts */}
       <Route path="/match" component={MatchForm} />
       <Route path="/results" component={Results} />
       <Route path="/opportunities/:id" component={OpportunityDetail} />
 
-      {/* Admin — separate layout, no public shell */}
+      {/* Admin — separate layout, no public shell. Lazily loaded, so none of
+          this code is downloaded by public visitors. */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/opportunities" component={AdminOpportunities} />
@@ -79,9 +85,10 @@ function Router() {
       <Route path="/admin/candidates/:id" component={AdminCandidateDetail} />
       <Route path="/admin/pathways" component={AdminPathways} />
 
-      {/* Everything else → shared public shell with page transitions */}
-      <Route component={PublicShell} />
-    </Switch>
+        {/* Everything else → shared public shell with page transitions */}
+        <Route component={PublicShell} />
+      </Switch>
+    </Suspense>
   );
 }
 

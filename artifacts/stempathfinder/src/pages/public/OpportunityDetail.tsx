@@ -153,41 +153,14 @@ function seoTitle(o: DetailOpportunity): string {
     : `${o.title} | ${SITE_NAME}`;
 }
 
-function jobPostingJsonLd(o: DetailOpportunity, canonicalPath: string): object | null {
-  const isInternship = (o.opportunityType ?? "").toLowerCase().includes("internship");
-  const status = statusOf(o);
-  const open = status === "open" || (status === null && Boolean(o.deadline));
-  if (!isInternship || !open || !o.organization || !o.description) return null;
-
-  const jsonLd: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "JobPosting",
-    title: o.title,
-    description: o.description,
-    employmentType: "INTERN",
-    hiringOrganization: {
-      "@type": "Organization",
-      name: o.organization,
-      ...(o.officialUrl ? { sameAs: o.officialUrl } : {}),
-    },
-    url: absoluteUrl(canonicalPath),
-  };
-  if (o.createdAt) jsonLd["datePosted"] = o.createdAt.slice(0, 10);
-  if (o.deadline) jsonLd["validThrough"] = o.deadline;
-  if (o.remoteStatus === "remote") {
-    jsonLd["jobLocationType"] = "TELECOMMUTE";
-    jsonLd["applicantLocationRequirements"] = {
-      "@type": "Country",
-      name: "United States",
-    };
-  } else if (o.location) {
-    jsonLd["jobLocation"] = {
-      "@type": "Place",
-      address: { "@type": "PostalAddress", addressLocality: o.location },
-    };
-  }
-  return jsonLd;
-}
+// JobPosting markup was removed deliberately. Google requires structured data
+// to reflect the page's visible content and to be accurate. The previous block
+// hardcoded employmentType "INTERN" and a United States applicant-location
+// requirement, and mapped datePosted to the date our crawler first saw the
+// record. None of that is displayed or verified, and many of these listings are
+// unpaid academic programs rather than employment. EducationalOccupationalProgram
+// would be the correct type, but only once the records genuinely carry the
+// fields it requires.
 
 async function fetchDetail(id: string): Promise<DetailOpportunity> {
   const response = await fetch(`/api/opportunities/${encodeURIComponent(id)}`);
@@ -289,8 +262,6 @@ export default function OpportunityDetail() {
       isPartOf: { "@type": "WebSite", name: SITE_NAME, url: absoluteUrl("/") },
     },
   ];
-  const jobPosting = jobPostingJsonLd(opportunity, canonicalPath);
-  if (jobPosting) jsonLd.push(jobPosting);
 
   const similar = (browseData?.records ?? [])
     .filter(

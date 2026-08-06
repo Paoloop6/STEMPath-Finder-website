@@ -19,6 +19,12 @@ export interface BrowsePage {
   filter: (record: DatabaseRecord) => boolean;
   /** Paths of related browse pages to cross-link. */
   related: string[];
+  /**
+   * Set when a page's listing is a subset of another page's and cannot be
+   * meaningfully differentiated. It stays reachable for humans but is kept out
+   * of the index and the sitemap so it can't read as a doorway page.
+   */
+  noindex?: boolean;
 }
 
 /** Case-insensitive match across the fields students search by. */
@@ -56,6 +62,14 @@ function gradeIncludes(record: DatabaseRecord, grade: number): boolean {
 const isInternship = (r: DatabaseRecord) =>
   typeIs(r, /internship/) || matches(r, /\bintern(ship)?s?\b/);
 
+/**
+ * Internships with an explicit summer signal. /summer-internships and
+ * /high-school-internships previously shared one filter and rendered identical
+ * listings, which is the doorway-page pattern Google's spam policies describe.
+ */
+const isSummerInternship = (r: DatabaseRecord) =>
+  isInternship(r) && matches(r, /\bsummer\b/);
+
 const isFree = (r: DatabaseRecord) => {
   const cost = (r.cost ?? "").toLowerCase();
   return cost.includes("free") || cost === "$0" || cost === "0";
@@ -86,7 +100,7 @@ export const BROWSE_PAGES: BrowsePage[] = [
       "Use the listings below to compare programs, then apply directly on each internship's official site.",
     ],
     group: "category",
-    filter: isInternship,
+    filter: isSummerInternship,
     related: ["/paid-internships", "/research-programs", "/free-summer-programs", "/high-school-internships"],
   },
   {
@@ -114,6 +128,7 @@ export const BROWSE_PAGES: BrowsePage[] = [
     ],
     group: "category",
     filter: (r) => isInternship(r),
+    noindex: true,
     related: ["/engineering-opportunities", "/computer-science-opportunities", "/medical-opportunities"],
   },
   {
@@ -358,6 +373,7 @@ export const BROWSE_PAGES: BrowsePage[] = [
     ],
     group: "grade",
     filter: () => true,
+    noindex: true,
     related: ["/opportunities-for-9th-graders", "/summer-internships", "/free-summer-programs"],
   },
 ];
