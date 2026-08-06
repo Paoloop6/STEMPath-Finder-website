@@ -4,6 +4,7 @@ import { Results } from '@/components/home/HomeSections';
 import type { ChatTurn } from '@/components/chat/MessageBubble';
 import { askStempath, type ConversationTurn, type StudentProfile } from '@/lib/ask-stempath';
 import { DEFAULT_SEARCH_TIER, type SearchTier } from '@/lib/search-tier';
+import { Seo } from '@/components/Seo';
 
 const CONTEXT_TURN_LIMIT = 6;
 
@@ -79,6 +80,11 @@ function FindMatches() {
 
   return (
     <>
+      <Seo
+        title="Find Your STEM Opportunity Matches"
+        description="Answer a few questions and get matched to verified STEM opportunities for high school students — internships, research programs, and competitions that fit your grade and interests."
+        path="/find"
+      />
       <Hero
         value={question}
         onChange={setQuestion}

@@ -1,2 +1,24 @@
+# https://www.nextstepdatabase.fyi
+# Public content is fully crawlable; private and session-only areas are not.
+
 User-agent: *
 Allow: /
+
+# Admin, account and auth areas
+Disallow: /admin
+Disallow: /account
+Disallow: /login
+
+# API surface, except the database-driven sitemap below
+Disallow: /api/
+Allow: /api/sitemap.xml
+
+# Session-only / duplicate pages (also noindex via meta tags)
+Disallow: /match
+Disallow: /results
+
+# Static sitemap: homepage plus every published public page.
+Sitemap: https://www.nextstepdatabase.fyi/sitemap.xml
+
+# Database-driven sitemap: every published, non-expired opportunity page.
+Sitemap: https://www.nextstepdatabase.fyi/api/sitemap.xml

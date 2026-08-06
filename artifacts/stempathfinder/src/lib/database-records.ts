@@ -12,6 +12,8 @@ export const BROWSE_LIMIT = 500;
 
 export interface DatabaseRecord {
   id: string;
+  /** Stable numeric id used in public /opportunities/{slug}-{id} URLs. */
+  numeric_id: number | null;
   title: string | null;
   organization: string | null;
   opportunity_type: string | null;
@@ -20,6 +22,7 @@ export interface DatabaseRecord {
   eligible_grades: Array<string | number> | string | null;
   location: string | null;
   cost: string | null;
+  compensation: string | null;
   application_status: string | null;
   application_deadline: string | null;
   official_url: string | null;
@@ -41,6 +44,7 @@ export interface DatabaseRecord {
 /** Normalized record as returned by the server-side DynamoDB repository. */
 type ApiOpportunity = {
   opportunityId: string;
+  numericId?: number;
   title: string;
   organization: string | null;
   opportunityType: string | null;
@@ -52,6 +56,7 @@ type ApiOpportunity = {
   deadline: string | null;
   applicationStatus: string | null;
   cost: string | null;
+  compensation?: string | null;
   officialUrl: string | null;
   applicationUrl: string | null;
   experienceLevel: string | null;
@@ -84,6 +89,7 @@ export async function fetchDatabaseRecords(
   const records = meta.opportunities.slice(0, BROWSE_LIMIT).map(
     (o): DatabaseRecord => ({
       id: o.opportunityId,
+      numeric_id: typeof o.numericId === "number" ? o.numericId : null,
       title: o.title,
       organization: o.organization,
       opportunity_type: o.opportunityType,
@@ -91,6 +97,7 @@ export async function fetchDatabaseRecords(
       eligible_grades: o.gradeLevels,
       location: o.location,
       cost: o.cost,
+      compensation: o.compensation ?? null,
       application_status: o.applicationStatus,
       application_deadline: o.deadline,
       official_url: o.officialUrl,

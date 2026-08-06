@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useAdminLogin } from "@workspace/api-client-react";
+import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -59,6 +60,7 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <Seo title="Admin Login" robots="noindex, nofollow" />
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg">

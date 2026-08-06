@@ -1,0 +1,10 @@
+node_modules
+dist
+.local
+.agents
+attached_assets
+supabase/.temp
+scripts/tsconfig.tsbuildinfo
+*.tsbuildinfo
+.env
+.env.local

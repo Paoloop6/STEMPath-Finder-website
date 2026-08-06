@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
@@ -15,6 +16,9 @@ import MatchForm from '@/pages/public/MatchForm';
 import Results from '@/pages/public/Results';
 import OpportunityDetail from '@/pages/public/OpportunityDetail';
 import StudentPathways from '@/pages/public/StudentPathways';
+import BrowsePageView from '@/pages/public/BrowsePage';
+import GuidePage, { GuidesIndex } from '@/pages/public/GuidePage';
+import { BROWSE_PAGES } from '@/lib/browse-pages';
 
 import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
@@ -42,6 +46,14 @@ function PublicShell() {
           <Route path="/how" component={HowItWorksPage} />
           <Route path="/different" component={DifferencePage} />
           <Route path="/docs" component={Documentation} />
+          {/* Indexable category, location, and grade pages (config-driven). */}
+          {BROWSE_PAGES.map((page) => (
+            <Route key={page.path} path={page.path}>
+              <BrowsePageView path={page.path} />
+            </Route>
+          ))}
+          <Route path="/guides" component={GuidesIndex} />
+          <Route path="/guides/:slug" component={GuidePage} />
           <Route component={NotFound} />
         </Switch>
       </div>
@@ -81,6 +93,7 @@ function App() {
           <Router />
         </WouterRouter>
         <Toaster />
+        <Analytics />
       </TooltipProvider>
     </QueryClientProvider>
   );

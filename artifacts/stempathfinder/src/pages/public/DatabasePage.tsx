@@ -1,25 +1,19 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { ArrowUpRight, BadgeCheck, RefreshCw, Search, SlidersHorizontal } from 'lucide-react';
+import { RefreshCw, Search, SlidersHorizontal } from 'lucide-react';
 import {
   BROWSE_LIMIT,
   distinctStemFields,
   distinctValues,
   fetchDatabaseRecords,
-  gradeLabel,
   humanize,
   matchesQuery,
-  type DatabaseRecord,
 } from '@/lib/database-records';
+import { OpportunityRow } from '@/components/OpportunityRow';
+import { Seo } from '@/components/Seo';
 
 const ANY = '';
-
-const STATUS_TONE: Record<string, string> = {
-  open: 'text-[var(--brand-success)] border-[var(--brand-success)]/40',
-  upcoming: 'text-[var(--brand-warning)] border-[var(--brand-warning)]/40',
-  closed: 'text-[var(--brand-error)] border-[var(--brand-error)]/40',
-};
 
 const selectBase =
   'w-full rounded-[8px] border border-border bg-[var(--brand-bg)] px-3 py-2 text-[13px] text-foreground outline-none transition-colors focus:border-primary/50';
@@ -61,99 +55,6 @@ function Filter({
           </option>
         ))}
       </select>
-    </div>
-  );
-}
-
-function metaLine(record: DatabaseRecord): string {
-  const grades = gradeLabel(record.eligible_grades);
-  return [
-    humanize(record.opportunity_type),
-    grades ? `Grades ${grades}` : '',
-    record.location,
-    record.cost,
-    humanize(record.program_format),
-    record.application_deadline ? `Deadline ${record.application_deadline}` : '',
-  ]
-    .filter(Boolean)
-    .join('  ·  ');
-}
-
-function shortDate(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
-
-function RecordRow({ record }: { record: DatabaseRecord }) {
-  const link = record.official_url || record.application_url || undefined;
-  const status = record.application_status;
-  const tone = status ? STATUS_TONE[status] : undefined;
-
-  return (
-    <div className="border-t border-border py-5">
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div className="min-w-0">
-          <h3 className="font-display text-[17px] font-semibold leading-snug text-foreground">
-            {link ? (
-              <a
-                href={link}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex items-start gap-1 hover:underline"
-              >
-                {record.title ?? 'Untitled opportunity'}
-                <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-              </a>
-            ) : (
-              (record.title ?? 'Untitled opportunity')
-            )}
-            {(record.review_status === 'pending' || !record.published) && (
-              <span className="ml-2 inline-flex translate-y-[-2px] items-center rounded-full border border-[var(--brand-warning)]/40 px-2 py-0.5 align-middle text-[10px] font-medium text-[var(--brand-warning)]">
-                Pending review
-              </span>
-            )}
-          </h3>
-          {record.organization && (
-            <p className="mt-0.5 text-[13px] text-muted-foreground">{record.organization}</p>
-          )}
-        </div>
-        {status && status !== 'unknown' && (
-          <span
-            className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium capitalize ${
-              tone ?? 'border-border text-muted-foreground'
-            }`}
-          >
-            {status}
-          </span>
-        )}
-      </div>
-
-      <p className="mt-2.5 font-annotation text-[12px] text-[var(--brand-muted-3)]">{metaLine(record)}</p>
-
-      {Array.isArray(record.stem_fields) && record.stem_fields.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {record.stem_fields.map((field) => (
-            <span
-              key={field}
-              className="rounded-[6px] border border-border px-2 py-0.5 text-[11px] text-muted-foreground"
-            >
-              {field}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
-        <span className="flex items-center gap-1.5 text-[var(--brand-success)]">
-          <BadgeCheck className="size-3.5" /> Researched from its official source
-        </span>
-        {record.discovered_at && <span>Discovered {shortDate(record.discovered_at)}</span>}
-        {record.last_verified_at && record.last_verified_at !== record.discovered_at && (
-          <span>Content updated {shortDate(record.last_verified_at)}</span>
-        )}
-        {record.checked_at && <span>Last checked {shortDate(record.checked_at)}</span>}
-      </p>
     </div>
   );
 }
@@ -221,6 +122,11 @@ function DatabasePage() {
 
   return (
     <section className="mx-auto w-full max-w-[var(--page-width)] px-4 pb-24 pt-12 sm:px-6 sm:pt-16">
+      <Seo
+        title="Browse the STEM Opportunity Database"
+        description="Browse every researched STEM opportunity for high school students — internships, research programs, competitions, and camps with verified details and deadlines."
+        path="/database"
+      />
       <span className="font-annotation text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
         The database
       </span>
@@ -332,7 +238,7 @@ function DatabasePage() {
       ) : (
         <div className="mt-2">
           {filtered.map((record) => (
-            <RecordRow key={record.id} record={record} />
+            <OpportunityRow key={record.id} record={record} />
           ))}
         </div>
       )}

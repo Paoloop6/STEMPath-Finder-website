@@ -15,6 +15,7 @@ import {
   type UniversityCategory,
 } from "@/data/universities";
 import { UniversityLogo } from "@/components/UniversityLogo";
+import { Seo } from "@/components/Seo";
 
 /**
  * Student Pathways — real STEM extracurricular pathways from publicly shared
@@ -225,6 +226,11 @@ export default function StudentPathways() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:px-6">
+      <Seo
+        title="Student Pathways: Real Routes Into Top STEM Colleges"
+        description="Explore anonymized pathways of real students — the activities, awards, and programs that led to acceptances at top STEM universities."
+        path="/student-pathways"
+      />
       <header className="mb-8">
         <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
           <GraduationCap className="h-4 w-4" /> Student pathways

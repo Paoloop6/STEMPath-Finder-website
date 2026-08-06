@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Seo } from "@/components/Seo";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -95,6 +96,8 @@ export default function MatchForm() {
 
   return (
     <MainLayout>
+      {/* Legacy structured form — /find is the canonical search experience. */}
+      <Seo title="Match Form" robots="noindex, follow" />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
         <h1 className="text-2xl font-bold text-foreground mb-2">Find your match</h1>
         <p className="text-muted-foreground mb-8">

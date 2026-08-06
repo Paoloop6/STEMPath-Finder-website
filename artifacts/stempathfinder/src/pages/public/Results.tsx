@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { MatchResult } from "@workspace/api-client-react";
+import { Seo } from "@/components/Seo";
 
 export default function Results() {
   const [, setLocation] = useLocation();
@@ -26,6 +27,8 @@ export default function Results() {
 
   return (
     <MainLayout>
+      {/* Session-specific results — never indexable. */}
+      <Seo title="Your Match Results" robots="noindex, follow" />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>

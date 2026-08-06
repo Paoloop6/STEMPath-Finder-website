@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @workspace/stempathfinder run build && node artifacts/api-server/build-serverless.mjs",
+  "outputDirectory": "artifacts/stempathfinder/dist/public",
+  "functions": {
+    "api/index.mjs": { "maxDuration": 60 }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
+    {
+      "source": "/((?!api/|assets/|university-logos/|robots\\.txt|sitemap).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

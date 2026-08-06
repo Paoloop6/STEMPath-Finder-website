@@ -5,6 +5,7 @@ import { LiveStats } from '@/components/home/LiveStats';
 import { DONUT_COLORS, DonutLegend, ScoreDonut } from '@/components/ScoreDonut';
 import type { ChatTurn } from '@/components/chat/MessageBubble';
 import type { OpportunityMatch } from '@/lib/ask-stempath';
+import { opportunityPath } from '@/lib/seo';
 
 /** Subtle on-scroll reveal. */
 export function Reveal({ children, className }: { children: ReactNode; className?: string }) {
@@ -233,9 +234,14 @@ export function Difference() {
         <Reveal>
           <Eyebrow>How we’re different</Eyebrow>
           <h2 className="font-display mt-3 max-w-[820px] text-[28px] font-[640] leading-[1.08] tracking-[-0.03em] text-foreground sm:text-[40px]">
-            A chatbot answers from your prompt. STEMPath Finder answers from a database it researched
-            first.
+            Unlike ChatGPT, STEMPath Finder compares your search against a database it built first.
           </h2>
+          <p className="mt-5 max-w-[720px] text-[16px] leading-[1.7] text-[var(--brand-muted-1)]">
+            ChatGPT generates an answer from your prompt on the spot. STEMPath Finder researches real
+            opportunities from official sources ahead of time, stores them as structured records, and
+            compares your search against that database — so every match is a real, verified program,
+            never an invented one.
+          </p>
         </Reveal>
 
         <div className="mt-12 hidden grid-cols-2 gap-10 border-b border-border pb-3 sm:grid">
@@ -436,6 +442,17 @@ function ResultItem({ m }: { m: OpportunityMatch }) {
       </div>
 
       <p className="mt-3 font-annotation text-[12px] text-[var(--brand-muted-3)]">{metaLine(m)}</p>
+
+      {m.title && (
+        <p className="mt-1.5">
+          <Link
+            href={opportunityPath(m.title, m.id)}
+            className="text-[13px] text-primary underline-offset-4 hover:underline"
+          >
+            View details on STEMPath Finder
+          </Link>
+        </p>
+      )}
 
       {m.match_reason && (
         <p className="mt-3 max-w-[680px] text-[14px] leading-[1.6] text-[var(--brand-muted-1)]">
@@ -653,17 +670,126 @@ export function CtaBand() {
   );
 }
 
-/** Footer with the V1 session/sign-in note. */
+/** What students can find here — visible, crawlable copy with category links. */
+export function WhatYouCanFind() {
+  const categories: Array<{ label: string; href: string }> = [
+    { label: 'Summer internships', href: '/summer-internships' },
+    { label: 'Research opportunities', href: '/research-programs' },
+    { label: 'Coding programs', href: '/computer-science-opportunities' },
+    { label: 'Engineering programs', href: '/engineering-opportunities' },
+    { label: 'Medical programs', href: '/medical-opportunities' },
+    { label: 'Robotics opportunities', href: '/robotics-opportunities' },
+    { label: 'Science competitions', href: '/science-competitions' },
+    { label: 'Volunteering', href: '/volunteer-opportunities' },
+    { label: 'Paid internships', href: '/paid-internships' },
+    { label: 'Free summer programs', href: '/free-summer-programs' },
+  ];
+  return (
+    <section className="border-t border-border px-4 py-16 sm:px-6 sm:py-20">
+      <div className="mx-auto w-full max-w-[var(--story-width)]">
+        <Reveal>
+          <Eyebrow>What you can find</Eyebrow>
+          <h2 className="font-display mt-3 max-w-[760px] text-[26px] font-[620] leading-[1.12] tracking-[-0.02em] text-foreground sm:text-[34px]">
+            Summer internships and STEM opportunities for high school students.
+          </h2>
+          <p className="mt-5 max-w-[680px] text-[15px] leading-[1.7] text-[var(--brand-muted-1)]">
+            STEMPath Finder helps students find summer internships, research opportunities, coding
+            programs, engineering programs, medical programs, robotics opportunities, science
+            competitions, volunteering, mentorships, and summer camps — each researched from its
+            official source with eligibility, deadlines, and cost in one place.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-2.5">
+            {categories.map((category) => (
+              <Link
+                key={category.href}
+                href={category.href}
+                className="rounded-full border border-border px-3.5 py-1.5 text-[13px] text-foreground transition-colors hover:bg-accent"
+              >
+                {category.label}
+              </Link>
+            ))}
+          </div>
+          <p className="mt-6 text-[14px] text-[var(--brand-muted-1)]">
+            Browse by place or grade:{' '}
+            <Link href="/locations/houston" className="text-primary underline-offset-4 hover:underline">Houston</Link>,{' '}
+            <Link href="/locations/texas" className="text-primary underline-offset-4 hover:underline">Texas</Link>,{' '}
+            <Link href="/locations/remote" className="text-primary underline-offset-4 hover:underline">remote programs</Link>,{' '}
+            <Link href="/opportunities-for-9th-graders" className="text-primary underline-offset-4 hover:underline">9th</Link>–
+            <Link href="/opportunities-for-12th-graders" className="text-primary underline-offset-4 hover:underline">12th graders</Link>{' '}
+            — or read the{' '}
+            <Link href="/guides" className="text-primary underline-offset-4 hover:underline">student guides</Link>.
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+const FOOTER_COLUMNS: Array<{ heading: string; links: Array<{ label: string; href: string }> }> = [
+  {
+    heading: 'Opportunities',
+    links: [
+      { label: 'Summer Internships', href: '/summer-internships' },
+      { label: 'Research Programs', href: '/research-programs' },
+      { label: 'Coding Opportunities', href: '/computer-science-opportunities' },
+      { label: 'Engineering Opportunities', href: '/engineering-opportunities' },
+      { label: 'Medical Opportunities', href: '/medical-opportunities' },
+      { label: 'Science Competitions', href: '/science-competitions' },
+    ],
+  },
+  {
+    heading: 'Browse',
+    links: [
+      { label: 'Houston Opportunities', href: '/locations/houston' },
+      { label: 'Texas Opportunities', href: '/locations/texas' },
+      { label: 'Remote Programs', href: '/locations/remote' },
+      { label: 'Paid Internships', href: '/paid-internships' },
+      { label: 'Free Summer Programs', href: '/free-summer-programs' },
+      { label: 'Full Database', href: '/database' },
+    ],
+  },
+  {
+    heading: 'STEMPath Finder',
+    links: [
+      { label: 'About STEMPath Finder', href: '/how' },
+      { label: 'Vs. ChatGPT', href: '/different' },
+      { label: 'Student Guides', href: '/guides' },
+      { label: 'Find Your Matches', href: '/find' },
+      { label: 'Student Pathways', href: '/student-pathways' },
+    ],
+  },
+];
+
+/** Site-wide footer: major categories, locations, and about links. */
 export function HomeFooter() {
   return (
     <footer className="border-t border-border px-4 py-12 sm:px-6">
-      <div className="mx-auto flex w-full max-w-[var(--story-width)] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto grid w-full max-w-[var(--story-width)] grid-cols-1 gap-8 sm:grid-cols-3">
+        {FOOTER_COLUMNS.map((column) => (
+          <nav key={column.heading} aria-label={column.heading}>
+            <p className="font-annotation text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+              {column.heading}
+            </p>
+            <ul className="mt-3 space-y-2">
+              {column.links.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))}
+      </div>
+      <div className="mx-auto mt-10 flex w-full max-w-[var(--story-width)] flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[13px] text-muted-foreground">
           &copy; {new Date().getFullYear()} STEMPath Finder · No sign-in required · This session is not saved.
         </p>
         <div className="flex gap-5 text-[13px] text-muted-foreground">
-          <Link href="/how" className="transition-colors hover:text-foreground">How it works</Link>
-          <Link href="/different" className="transition-colors hover:text-foreground">Vs. ChatGPT</Link>
           <Link href="/docs" className="transition-colors hover:text-foreground">Documentation</Link>
           <a href="/admin/login" className="transition-colors hover:text-foreground">Admin</a>
         </div>

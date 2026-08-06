@@ -4,6 +4,7 @@ import { useAdminMe, useAdminLogout, getAdminMeQueryKey } from "@workspace/api-c
 import { Compass, LayoutDashboard, Database, Users, LogOut, Loader2 } from "lucide-react";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Seo } from "@/components/Seo";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -53,6 +54,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen bg-muted/10 flex flex-col md:flex-row">
+      <Seo title="Admin" robots="noindex, nofollow" />
       {/* Sidebar */}
       <div className="w-full md:w-64 bg-sidebar border-r border-sidebar-border flex-shrink-0 flex flex-col hidden md:flex">
         <div className="h-16 flex items-center px-6 border-b border-sidebar-border/50">

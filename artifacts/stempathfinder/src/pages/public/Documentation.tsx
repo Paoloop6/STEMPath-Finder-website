@@ -1,4 +1,5 @@
 import { FileText } from 'lucide-react';
+import { Seo } from '@/components/Seo';
 
 /**
  * Documentation page. Placeholder until the final PDF is ready.
@@ -10,6 +11,8 @@ const PDF_URL: string | null = null;
 function Documentation() {
   return (
     <section className="px-4 py-16 sm:px-6 sm:py-24">
+      {/* Placeholder page — keep out of the index until the PDF ships. */}
+      <Seo title="Documentation" path="/docs" robots="noindex, follow" />
         <div className="mx-auto w-full max-w-[var(--story-width)]">
           <span className="font-annotation text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             Documentation

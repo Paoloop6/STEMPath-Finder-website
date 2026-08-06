@@ -8,6 +8,7 @@ const LINKS: Array<[string, string]> = [
   ['/student-pathways', 'Pathways'],
   ['/how', 'How it works'],
   ['/different', 'Vs. ChatGPT'],
+  ['/guides', 'Guides'],
   ['/docs', 'Documentation'],
 ];
 
