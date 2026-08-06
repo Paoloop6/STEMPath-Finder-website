@@ -5,15 +5,38 @@
   "outputDirectory": "artifacts/stempathfinder/dist/public",
   "trailingSlash": false,
   "functions": {
-    "api/index.mjs": { "maxDuration": 60 }
+    "api/index.mjs": {
+      "maxDuration": 60
+    }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/opportunities/(.*)", "destination": "/index.html" },
-    { "source": "/admin", "destination": "/index.html" },
-    { "source": "/admin/(.*)", "destination": "/index.html" },
-    { "source": "/match", "destination": "/index.html" },
-    { "source": "/results", "destination": "/index.html" },
-    { "source": "/docs", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/opportunities/(.*)",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/match",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/results",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/docs",
+      "destination": "/app.html"
+    }
   ]
 }

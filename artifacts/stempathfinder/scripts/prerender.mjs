@@ -343,6 +343,23 @@ for (const route of routes) {
   written += 1;
 }
 
+// --- Neutral app shell for client-rendered routes -------------------------
+// Routes that can't be prerendered (opportunity detail, /match, /results,
+// /docs, admin) are rewritten here rather than to /index.html. Pointing them
+// at index.html would serve the prerendered HOMEPAGE — its H1, its copy, and a
+// canonical of "/" — to every one of those URLs, which reads as a duplicate of
+// the homepage to any crawler that doesn't execute JS. This shell carries no
+// body copy and no canonical, so the values React sets are the only ones.
+{
+  let shell = template;
+  shell = shell.replace(/<link rel="canonical" href="[^"]*"\s*\/?>/, '');
+  shell = shell.replace(
+    /<meta property="og:url" content="[^"]*"\s*\/?>/,
+    '',
+  );
+  await writeFile(path.join(DIST, 'app.html'), shell, 'utf8');
+}
+
 // --- 404 page -------------------------------------------------------------
 // Vercel serves this with a real HTTP 404 for any path that matches no file
 // and no rewrite. Before this, the SPA catch-all returned 200 for every
