@@ -81,7 +81,15 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: true,
     proxy: {
-      '/api': 'http://localhost:8080',
+      // Point at the deployed API with API_PROXY=https://www.nextstepdatabase.fyi
+      // when you only want to work on the frontend.
+      '/api': {
+        target: process.env.API_PROXY ?? 'http://localhost:8080',
+        changeOrigin: true,
+        // Dev only: some networks inject their own TLS root; the proxied API
+        // is our own deployment, so skip cert verification here.
+        secure: false,
+      },
     },
     fs: {
       strict: true,

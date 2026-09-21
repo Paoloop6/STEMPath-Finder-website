@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type React from 'react';
 import { Link } from 'wouter';
 import { ArrowRight, ArrowUpRight, BadgeCheck, TriangleAlert } from 'lucide-react';
+import { DeparturesBoard, FlapWord, relativeUpdated, useNow } from '@/components/home/DeparturesBoard';
+import { useQuery } from '@tanstack/react-query';
+import { fetchOpportunityStats } from '@/lib/live-stats';
 import { LiveStats } from '@/components/home/LiveStats';
 import { DONUT_COLORS, DonutLegend, ScoreDonut } from '@/components/ScoreDonut';
 import type { ChatTurn } from '@/components/chat/MessageBubble';
@@ -561,41 +565,142 @@ export function Results({ turn, query, followUp, onFollowUpChange, onFollowUp, o
 
 /** Marketing hero for the Home page (not the search — that lives on /find). */
 export function HomeHero() {
+  const stats = useQuery({ queryKey: ['opportunity-stats'], queryFn: () => fetchOpportunityStats(), staleTime: 5 * 60 * 1000 });
+  const now = useNow(60_000);
+  const total = stats.data?.totalActive ?? null;
+  // The sign's own words: HOME_H1 is prerendered verbatim; the plate wraps its last phrase.
+  const cut = HOME_H1.lastIndexOf('sorted by');
+  const lead = cut > 0 ? HOME_H1.slice(0, cut) : HOME_H1;
+  const plate = cut > 0 ? HOME_H1.slice(cut) : '';
   return (
-    <section className="relative px-4 pb-20 pt-20 sm:px-6 sm:pb-28 sm:pt-28">
-      <div className="relative mx-auto max-w-[880px] text-center">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -inset-x-10 -top-16 bottom-0 -z-[1]"
-          style={{ background: 'radial-gradient(78% 55% at 50% 30%, rgba(7,8,9,0.94), rgba(7,8,9,0.55) 55%, transparent 82%)' }}
-        />
-        <span className="font-annotation text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-          Researched before you arrive
-        </span>
-        <h1 className="font-display mx-auto mt-5 max-w-[820px] text-[42px] font-[680] leading-[0.98] tracking-[-0.04em] text-foreground sm:text-[68px] lg:text-[80px]">
-          {HOME_H1}
+    <section className="px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12">
+      <div className="mx-auto w-full max-w-[var(--page-width)]">
+        <h1 className="font-display text-[36px] font-[900] leading-[0.94] tracking-[-0.02em] text-foreground sm:text-[56px] lg:text-[64px] xl:text-[72px]">
+          {lead}
+          <br className="hidden lg:inline" />
+          {plate && <span className="plate" data-wipe="">{plate}</span>}
         </h1>
-        <p className="mx-auto mt-6 max-w-[600px] text-[17px] leading-[1.6] text-[var(--brand-muted-1)]">
-          {HOME_LEAD}
-        </p>
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/find"
-            className="inline-flex items-center gap-2 rounded-[var(--radius-button)] bg-primary px-6 py-3 text-[15px] font-bold text-primary-foreground transition-transform hover:-translate-y-px"
-          >
-            Find your matches
-            <ArrowRight className="size-4" />
-          </Link>
-          <Link
-            href="/how"
-            className="liquid-glass inline-flex items-center gap-2 rounded-[var(--radius-button)] px-6 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-white/10"
-          >
-            How it works
-          </Link>
+
+        <div className="mt-7 grid grid-cols-1 items-end gap-x-12 gap-y-6 border-t border-[var(--hall-line-strong)] pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          {/* The count is the proof, so it gets the sign's biggest lettering. */}
+          <div className="hero-count">
+            <div className="flex items-end gap-4">
+              {total !== null ? (
+                <FlapWord text={total.toLocaleString()} width={5} size={52} tone="amber" />
+              ) : (
+                <span className="skeleton-shimmer inline-block h-[80px] w-[16rem] rounded-[4px]" aria-hidden="true" />
+              )}
+            </div>
+            <p className="mt-2.5 font-board text-[15px] font-bold tracking-[0.12em] text-[var(--ink)]">
+              Listings on the board
+              <span className="mx-2 text-[var(--ink-faint)]">·</span>
+              <span className="text-[var(--ink-muted)]">{stats.data ? relativeUpdated(stats.data.lastUpdated, now) : 'checking'}</span>
+            </p>
+          </div>
+
+          <div className="max-w-[48ch] lg:justify-self-end">
+            <p className="text-[17px] leading-[1.5] text-[var(--ink-soft)] sm:text-[19px]">{HOME_LEAD}</p>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link href="/find" className="btn-slab press text-[16px] !px-6 !py-3.5">
+                Find your matches
+                <ArrowRight className="size-[18px]" aria-hidden="true" />
+              </Link>
+              <Link href="/how" className="btn-line press text-[16px] !px-6 !py-3.5">
+                How records are made
+              </Link>
+            </div>
+          </div>
         </div>
-        {/* Backs up the "researched before you arrive" claim with the actual counts. */}
-        <div className="mx-auto mt-10 max-w-[620px] text-left">
-          <LiveStats />
+
+        <div className="mt-8 sm:mt-9">
+          <DeparturesBoard />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+type Gate = { code: string; label: string; href: string; note: string };
+
+const GATES: Gate[] = [
+  { code: 'A1', label: 'Summer internships', href: '/summer-internships', note: 'Paid and unpaid placements at labs, companies, and universities.' },
+  { code: 'A2', label: 'Research programs', href: '/research-programs', note: 'Mentored projects, often with a poster or paper at the end.' },
+  { code: 'B1', label: 'Science competitions', href: '/science-competitions', note: 'Fairs, olympiads, and challenges with real judging.' },
+  { code: 'B2', label: 'Coding programs', href: '/computer-science-opportunities', note: 'Software, data, and AI programs for beginners through advanced.' },
+  { code: 'C1', label: 'Engineering programs', href: '/engineering-opportunities', note: 'Build-focused camps, robotics, and design challenges.' },
+  { code: 'C2', label: 'Medical programs', href: '/medical-opportunities', note: 'Shadowing, hospital volunteering, and pre-med academies.' },
+  { code: 'D1', label: 'Robotics', href: '/robotics-opportunities', note: 'Teams, leagues, and summer robotics intensives.' },
+  { code: 'D2', label: 'Volunteering', href: '/volunteer-opportunities', note: 'Service hours with a STEM angle.' },
+  { code: 'E1', label: 'Paid internships', href: '/paid-internships', note: 'Only listings whose record shows a stipend or wage.' },
+  { code: 'E2', label: 'Free summer programs', href: '/free-summer-programs', note: 'Only listings whose record shows no cost.' },
+];
+
+/** Fires once when the element scrolls into view; instant under reduced motion. */
+function useInViewOnce<T extends HTMLElement>(margin = '-80px'): [React.RefObject<T | null>, boolean] {
+  const ref = useRef<T>(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setSeen(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSeen(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: margin },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [margin]);
+  return [ref, seen];
+}
+
+/** The gates: every category is a sign you can walk to. Crawlable links. */
+export function WhatYouCanFind() {
+  const [listRef, seen] = useInViewOnce<HTMLUListElement>();
+  return (
+    <section className="band-deep border-t border-[var(--hall-line-strong)] px-4 py-20 sm:px-6 sm:py-28" aria-labelledby="gates-heading">
+      <div className="mx-auto w-full max-w-[var(--page-width)]">
+        <div>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <h2 id="gates-heading" className="font-display max-w-[14ch] text-[32px] font-[900] leading-[0.94] tracking-[-0.02em] text-foreground sm:text-[52px]">
+              Pick a gate. Every one leads to real listings.
+            </h2>
+            <p className="max-w-[40ch] text-[15px] leading-[1.6] text-[var(--ink-muted)]">
+              Summer internships, research, competitions, coding, engineering, medicine, robotics, volunteering, scholarships, and camps for grades 6–12, each read from its official source.
+            </p>
+          </div>
+        </div>
+        <div className="mt-10">
+          <ul ref={listRef} className="grid grid-cols-1 border-b border-[var(--hall-line-strong)] md:grid-cols-2 md:gap-x-12">
+            {GATES.map((g, i) => (
+              <li key={g.href} className="reveal-row" data-visible={seen ? '' : undefined} style={{ ['--r' as string]: Math.floor(i / 2) }}>
+                <Link href={g.href} className="gate press">
+                  <span className="gate-code tnum" aria-hidden="true">{g.code}</span>
+                  <span className="min-w-0">
+                    <span className="gate-label font-board block text-[24px] font-bold leading-none tracking-[0.02em] text-foreground sm:text-[34px]">{g.label}</span>
+                    <span className="mt-1.5 block text-[14px] leading-[1.45] text-[var(--ink-muted)]">{g.note}</span>
+                  </span>
+                  <ArrowRight className="gate-arrow size-5 shrink-0 text-foreground" aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 text-[14px] text-[var(--ink-muted)]">
+            Or browse by place and grade:{' '}
+            <Link href="/locations/houston" className="text-foreground underline">Houston</Link>,{' '}
+            <Link href="/locations/texas" className="text-foreground underline">Texas</Link>,{' '}
+            <Link href="/locations/remote" className="text-foreground underline">remote programs</Link>,{' '}
+            <Link href="/opportunities-for-9th-graders" className="text-foreground underline">9th</Link>–
+            <Link href="/opportunities-for-12th-graders" className="text-foreground underline">12th graders</Link>, or read the{' '}
+            <Link href="/guides" className="text-foreground underline">student guides</Link>.
+          </p>
         </div>
       </div>
     </section>
@@ -604,122 +709,61 @@ export function HomeHero() {
 
 const INSPIRATION: Array<{ tag: string; title: string; body: string }> = [
   {
-    tag: 'The itch',
+    tag: 'Why it exists',
     title: 'I wanted this to exist, so I built it.',
-    body: 'I kept looking for a single place to find real STEM opportunities — and there wasn’t one worth trusting. So I decided to make the STEM opportunity finder I actually wanted to use.',
+    body: 'I kept looking for a single place to find real STEM opportunities and there was not one worth trusting. So I made the one I actually wanted to use.',
   },
   {
-    tag: 'The difference',
+    tag: 'What is different',
     title: 'Verified and structured, not crowdsourced.',
-    body: 'Most sites are stale, crowdsourced lists with dead links and invented deadlines. To be different, every opportunity here is researched from its official source and kept in one consistent, structured shape.',
+    body: 'Most lists are stale, with dead links and invented deadlines. Every record here is read from its official source and kept in one consistent shape, so listings can be compared side by side.',
   },
   {
-    tag: 'The idea',
-    title: 'Automate the research, then store it.',
-    body: 'The unlock was automation: research and structure opportunities ahead of time and store them, so a search retrieves verified records instantly instead of asking a model to invent an answer.',
+    tag: 'How it works',
+    title: 'Research first, then store it.',
+    body: 'A pipeline reads each program page ahead of time and stores a structured record. A search retrieves verified records instantly instead of asking a model to invent an answer.',
   },
 ];
 
-/** Home inspiration story — why I'm interested and what makes this different. */
+/** The notice pinned beside the board: who made this and why. */
 export function Inspiration() {
   return (
-    <section className="border-t border-border px-4 py-16 sm:px-6 sm:py-24">
-      <div className="mx-auto w-full max-w-[var(--story-width)]">
-        <Reveal>
-          <Eyebrow>The inspiration</Eyebrow>
-          <h2 className="font-display mt-3 max-w-[760px] text-[28px] font-[640] leading-[1.08] tracking-[-0.03em] text-foreground sm:text-[40px]">
-            Why I&apos;m building STEMPath Finder.
-          </h2>
-        </Reveal>
-        <div className="mt-12 border-t border-border">
-          {INSPIRATION.map((row) => (
-            <Reveal key={row.tag}>
-              <div className="grid grid-cols-1 gap-2 border-b border-border py-8 sm:grid-cols-[160px_1fr] sm:gap-10">
-                <span className="font-annotation text-[12px] uppercase tracking-[0.14em] text-muted-foreground">{row.tag}</span>
-                <div className="max-w-[720px]">
-                  <h3 className="font-display text-[20px] font-semibold leading-snug text-foreground sm:text-[24px]">{row.title}</h3>
-                  <p className="mt-2 text-[15px] leading-[1.7] text-[var(--brand-muted-1)]">{row.body}</p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+    <section className="border-t border-[var(--hall-line-strong)] px-4 py-20 sm:px-6 sm:py-28" aria-labelledby="notice-heading">
+      <div className="mx-auto w-full max-w-[var(--page-width)]">
+        <h2 id="notice-heading" className="font-display max-w-[18ch] text-[34px] font-[900] leading-[0.94] tracking-[-0.02em] text-foreground sm:text-[56px] lg:text-[68px]">
+          “I wanted this to exist, so I built it.”
+        </h2>
+        <p className="mt-6 max-w-[44ch] text-[17px] leading-[1.5] text-[var(--ink-soft)] sm:text-[19px]">
+          NextStep Database is one student's answer to a real problem. No partners, no sponsors, no accounts. Just the records.
+        </p>
+      </div>
+      <div className="mx-auto mt-14 grid w-full max-w-[var(--page-width)] grid-cols-1 gap-x-12 border-t border-[var(--hall-line-strong)] md:grid-cols-3">
+        {INSPIRATION.map((row) => (
+          <div key={row.tag} className="border-b border-border py-8 md:border-b-0 md:pr-6">
+            <h3 className="font-display text-[22px] font-[900] leading-[1] tracking-[-0.015em] text-foreground sm:text-[26px]">{row.title}</h3>
+            <p className="mt-3 text-[15px] leading-[1.6] text-[var(--ink-muted)]">{row.body}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
-/** Closing call-to-action band. */
+/** Closing call to action: one line, one slab, one honest footnote. */
 export function CtaBand() {
   return (
-    <section className="border-t border-border px-4 py-20 sm:px-6 sm:py-28">
-      <Reveal className="mx-auto max-w-[var(--content-width)] text-center">
-        <h2 className="font-display text-[30px] font-[660] leading-[1.05] tracking-[-0.03em] text-foreground sm:text-[46px]">
-          Ready to see what fits you?
+    <section className="band-deep border-t border-[var(--hall-line-strong)] px-4 py-24 sm:px-6 sm:py-36">
+      <div className="mx-auto w-full max-w-[var(--page-width)]">
+        <h2 className="font-display max-w-[12ch] text-[40px] font-[900] leading-[0.92] tracking-[-0.02em] text-foreground sm:text-[72px] lg:text-[92px]">
+          Your grade. Your interests. <span className="plate">Your board.</span>
         </h2>
-        <Link
-          href="/find"
-          className="mt-8 inline-flex items-center gap-2 rounded-[var(--radius-button)] bg-primary px-7 py-3.5 text-[15px] font-bold text-primary-foreground transition-transform hover:-translate-y-px"
-        >
-          Find your matches
-          <ArrowRight className="size-4" />
-        </Link>
-        <p className="mt-4 font-annotation text-[12px] text-[var(--brand-muted-3)]">No sign-in required · This session is not saved.</p>
-      </Reveal>
-    </section>
-  );
-}
-
-/** What students can find here — visible, crawlable copy with category links. */
-export function WhatYouCanFind() {
-  const categories: Array<{ label: string; href: string }> = [
-    { label: 'Summer internships', href: '/summer-internships' },
-    { label: 'Research opportunities', href: '/research-programs' },
-    { label: 'Coding programs', href: '/computer-science-opportunities' },
-    { label: 'Engineering programs', href: '/engineering-opportunities' },
-    { label: 'Medical programs', href: '/medical-opportunities' },
-    { label: 'Robotics opportunities', href: '/robotics-opportunities' },
-    { label: 'Science competitions', href: '/science-competitions' },
-    { label: 'Volunteering', href: '/volunteer-opportunities' },
-    { label: 'Paid internships', href: '/paid-internships' },
-    { label: 'Free summer programs', href: '/free-summer-programs' },
-  ];
-  return (
-    <section className="border-t border-border px-4 py-16 sm:px-6 sm:py-20">
-      <div className="mx-auto w-full max-w-[var(--story-width)]">
-        <Reveal>
-          <Eyebrow>What you can find</Eyebrow>
-          <h2 className="font-display mt-3 max-w-[760px] text-[26px] font-[620] leading-[1.12] tracking-[-0.02em] text-foreground sm:text-[34px]">
-            Summer internships and STEM opportunities for high school students.
-          </h2>
-          <p className="mt-5 max-w-[680px] text-[15px] leading-[1.7] text-[var(--brand-muted-1)]">
-            STEMPath Finder helps students find summer internships, research opportunities, coding
-            programs, engineering programs, medical programs, robotics opportunities, science
-            competitions, volunteering, mentorships, and summer camps — each researched from its
-            official source with eligibility, deadlines, and cost in one place.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-2.5">
-            {categories.map((category) => (
-              <Link
-                key={category.href}
-                href={category.href}
-                className="rounded-full border border-border px-3.5 py-1.5 text-[13px] text-foreground transition-colors hover:bg-accent"
-              >
-                {category.label}
-              </Link>
-            ))}
-          </div>
-          <p className="mt-6 text-[14px] text-[var(--brand-muted-1)]">
-            Browse by place or grade:{' '}
-            <Link href="/locations/houston" className="text-primary underline-offset-4 hover:underline">Houston</Link>,{' '}
-            <Link href="/locations/texas" className="text-primary underline-offset-4 hover:underline">Texas</Link>,{' '}
-            <Link href="/locations/remote" className="text-primary underline-offset-4 hover:underline">remote programs</Link>,{' '}
-            <Link href="/opportunities-for-9th-graders" className="text-primary underline-offset-4 hover:underline">9th</Link>–
-            <Link href="/opportunities-for-12th-graders" className="text-primary underline-offset-4 hover:underline">12th graders</Link>{' '}
-            — or read the{' '}
-            <Link href="/guides" className="text-primary underline-offset-4 hover:underline">student guides</Link>.
-          </p>
-        </Reveal>
+        <div className="mt-10 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-8">
+          <Link href="/find" className="btn-slab press text-[18px] !px-8 !py-4">
+            Find your matches
+            <ArrowRight className="size-5" aria-hidden="true" />
+          </Link>
+          <p className="font-board text-[14px] font-bold tracking-[0.12em] text-[var(--ink-muted)]">No sign-in · Nothing saved · About two minutes</p>
+        </div>
       </div>
     </section>
   );
@@ -729,54 +773,57 @@ const FOOTER_COLUMNS: Array<{ heading: string; links: Array<{ label: string; hre
   {
     heading: 'Opportunities',
     links: [
-      { label: 'Summer Internships', href: '/summer-internships' },
-      { label: 'Research Programs', href: '/research-programs' },
-      { label: 'Coding Opportunities', href: '/computer-science-opportunities' },
-      { label: 'Engineering Opportunities', href: '/engineering-opportunities' },
-      { label: 'Medical Opportunities', href: '/medical-opportunities' },
-      { label: 'Science Competitions', href: '/science-competitions' },
+      { label: 'Summer internships', href: '/summer-internships' },
+      { label: 'Research programs', href: '/research-programs' },
+      { label: 'Coding opportunities', href: '/computer-science-opportunities' },
+      { label: 'Engineering opportunities', href: '/engineering-opportunities' },
+      { label: 'Medical opportunities', href: '/medical-opportunities' },
+      { label: 'Science competitions', href: '/science-competitions' },
     ],
   },
   {
     heading: 'Browse',
     links: [
-      { label: 'Houston Opportunities', href: '/locations/houston' },
-      { label: 'Texas Opportunities', href: '/locations/texas' },
-      { label: 'Remote Programs', href: '/locations/remote' },
-      { label: 'Paid Internships', href: '/paid-internships' },
-      { label: 'Free Summer Programs', href: '/free-summer-programs' },
-      { label: 'Full Database', href: '/database' },
+      { label: 'Houston opportunities', href: '/locations/houston' },
+      { label: 'Texas opportunities', href: '/locations/texas' },
+      { label: 'Remote programs', href: '/locations/remote' },
+      { label: 'Paid internships', href: '/paid-internships' },
+      { label: 'Free summer programs', href: '/free-summer-programs' },
+      { label: 'Full database', href: '/database' },
     ],
   },
   {
-    heading: 'STEMPath Finder',
+    heading: 'NextStep Database',
     links: [
-      { label: 'About STEMPath Finder', href: '/how' },
-      { label: 'Vs. ChatGPT', href: '/different' },
-      { label: 'Student Guides', href: '/guides' },
-      { label: 'Find Your Matches', href: '/find' },
-      { label: 'Student Pathways', href: '/student-pathways' },
+      { label: 'How records are made', href: '/how' },
+      { label: 'Vs. a chatbot', href: '/different' },
+      { label: 'Student guides', href: '/guides' },
+      { label: 'Find your matches', href: '/find' },
+      { label: 'Student pathways', href: '/student-pathways' },
     ],
   },
 ];
 
-/** Site-wide footer: major categories, locations, and about links. */
+/** Site-wide footer: the signage index at the end of the hall. */
 export function HomeFooter() {
   return (
-    <footer className="border-t border-border px-4 py-12 sm:px-6">
-      <div className="mx-auto grid w-full max-w-[var(--story-width)] grid-cols-1 gap-8 sm:grid-cols-3">
+    <footer className="border-t border-border bg-[var(--hall-deep)] px-4 py-12 sm:px-6 sm:py-16">
+      <div className="mx-auto grid w-full max-w-[var(--page-width)] grid-cols-1 gap-10 sm:grid-cols-[1.2fr_1fr_1fr_1fr]">
+        <div>
+          <Link href="/" className="font-display inline-block text-[28px] font-[900] leading-[0.95] tracking-[-0.02em] text-foreground">
+            NextStep Database
+          </Link>
+          <p className="mt-3 max-w-[30ch] text-[13px] leading-[1.55] text-[var(--ink-muted)]">
+            Researched STEM opportunities for grades 6–12, sorted by what closes next.
+          </p>
+        </div>
         {FOOTER_COLUMNS.map((column) => (
           <nav key={column.heading} aria-label={column.heading}>
-            <p className="font-annotation text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-              {column.heading}
-            </p>
+            <p className="font-board text-[12px] font-bold tracking-[0.14em] text-[var(--ink-faint)]">{column.heading}</p>
             <ul className="mt-3 space-y-2">
               {column.links.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-                  >
+                  <Link href={link.href} className="text-[13.5px] text-[var(--ink-soft)] transition-colors hover:text-foreground hover:underline">
                     {link.label}
                   </Link>
                 </li>
@@ -785,13 +832,11 @@ export function HomeFooter() {
           </nav>
         ))}
       </div>
-      <div className="mx-auto mt-10 flex w-full max-w-[var(--story-width)] flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[13px] text-muted-foreground">
-          &copy; {new Date().getFullYear()} STEMPath Finder · No sign-in required · This session is not saved.
-        </p>
-        <div className="flex gap-5 text-[13px] text-muted-foreground">
-          <Link href="/docs" className="transition-colors hover:text-foreground">Documentation</Link>
-          <a href="/admin/login" className="transition-colors hover:text-foreground">Admin</a>
+      <div className="mx-auto mt-10 flex w-full max-w-[var(--page-width)] flex-col gap-3 border-t border-[var(--hall-line-strong)] pt-6 text-[12.5px] text-[var(--ink-muted)] sm:flex-row sm:items-center sm:justify-between">
+        <p className="tnum">&copy; {new Date().getFullYear()} NextStep Database · No sign-in required · This session is not saved.</p>
+        <div className="flex gap-5">
+          <Link href="/docs" className="transition-colors hover:text-foreground hover:underline">Documentation</Link>
+          <a href="/admin/login" className="transition-colors hover:text-foreground hover:underline">Admin</a>
         </div>
       </div>
     </footer>

@@ -1,20 +1,17 @@
 import type { ReactNode } from 'react';
-import { InteractiveField } from '@/components/home/InteractiveField';
 import { HomeFooter } from '@/components/home/HomeSections';
 import { TopBar } from './TopBar';
+import { MyBoardDrawer } from '@/components/home/MyBoardDrawer';
 
-/** Shared shell for every public page: flow-field background, liquid-glass top
- * bar, and footer. Auth-gated content can be layered in later without touching
- * page components. */
+/** Shared shell for every public page: the hall. A bright ground, the signage
+ * bar, the page, and the index at the end. */
 export function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="dark relative min-h-screen overflow-x-hidden bg-background text-foreground">
-      <InteractiveField />
-      <div className="relative z-10 flex min-h-screen flex-col">
-        <TopBar />
-        <main className="flex-1">{children}</main>
-        <HomeFooter />
-      </div>
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
+      <TopBar />
+      <main className="flex-1">{children}</main>
+      <HomeFooter />
+      <MyBoardDrawer />
     </div>
   );
 }

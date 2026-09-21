@@ -146,7 +146,7 @@ function Chip({
       className={`rounded-full border px-3 py-1 text-xs transition-colors ${
         active
           ? "border-primary bg-primary/15 text-primary"
-          : "border-white/15 text-muted-foreground hover:border-white/30 hover:text-foreground"
+          : "border-border text-muted-foreground hover:border-[var(--brand-border-active)] hover:text-foreground"
       }`}
     >
       {label}
@@ -160,7 +160,7 @@ function SourceBadge({ activity }: { activity: PathwayActivity }) {
       <BadgeCheck className="h-3 w-3" /> Source-linked
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-subtle)] px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
       <FileText className="h-3 w-3" /> Self-reported
     </span>
   );
@@ -281,7 +281,7 @@ export default function StudentPathways() {
                       className={`flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left text-xs transition-colors ${
                         active
                           ? "border-primary bg-primary/10"
-                          : "border-white/10 bg-white/5 hover:border-white/25"
+                          : "border-border bg-card hover:border-[var(--brand-border-active)]"
                       }`}
                     >
                       <UniversityLogo
@@ -359,7 +359,7 @@ export default function StudentPathways() {
             {pathways.map((pathway) => (
               <article
                 key={pathway.profileId}
-                className="rounded-2xl border border-white/10 bg-white/5 p-5"
+                className="rounded-[var(--radius-card)] border border-border bg-card p-5"
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
@@ -374,7 +374,7 @@ export default function StudentPathways() {
                     href={pathway.sourceUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/15 px-2.5 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:text-foreground"
                   >
                     Source <ArrowUpRight className="h-3 w-3" />
                   </a>
@@ -399,7 +399,7 @@ export default function StudentPathways() {
                   {pathway.activities.map((activity) => (
                     <li
                       key={activity.id}
-                      className="rounded-xl bg-black/20 p-3"
+                      className="rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-3"
                     >
                       <div className="mb-1 flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium">
@@ -413,15 +413,15 @@ export default function StudentPathways() {
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {activity.stemField &&
                           activity.stemField !== "unknown" && (
-                            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px]">
+                            <span className="rounded-full bg-[var(--surface-subtle)] px-2 py-0.5 text-[10px]">
                               {activity.stemField}
                             </span>
                           )}
-                        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px]">
+                        <span className="rounded-full bg-[var(--surface-subtle)] px-2 py-0.5 text-[10px]">
                           {activity.experienceType}
                         </span>
                         {activity.termType !== "unknown" && (
-                          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px]">
+                          <span className="rounded-full bg-[var(--surface-subtle)] px-2 py-0.5 text-[10px]">
                             {activity.termType.replace("_", " ")}
                           </span>
                         )}
@@ -431,7 +431,7 @@ export default function StudentPathways() {
                 </ul>
 
                 {pathway.awards.length > 0 && (
-                  <div className="mt-3 border-t border-white/10 pt-3">
+                  <div className="mt-3 border-t border-border pt-3">
                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       STEM awards
                     </p>

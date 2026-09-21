@@ -78,10 +78,13 @@ export type OpportunityListResponse = {
 
 export async function fetchDatabaseRecords(
   refresh = false,
+  limit?: number,
 ): Promise<{ records: DatabaseRecord[]; meta: OpportunityListResponse }> {
-  const response = await fetch(
-    `/api/opportunities${refresh ? "?refresh=true" : ""}`,
-  );
+  const params = new URLSearchParams();
+  if (refresh) params.set("refresh", "true");
+  if (limit) params.set("limit", String(limit));
+  const query = params.toString();
+  const response = await fetch(`/api/opportunities${query ? `?${query}` : ""}`);
   if (!response.ok) {
     throw new Error(`Could not load the database (${response.status}).`);
   }

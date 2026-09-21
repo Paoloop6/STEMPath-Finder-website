@@ -27,7 +27,7 @@ export const DIFFERENCE_INTRO: string[] = [
  * are in the served HTML, not only after hydration. HomeSections.tsx renders
  * these same constants — do not fork the strings.
  */
-export const HOME_H1 = "Find the STEM path that's actually yours.";
+export const HOME_H1 = "Every real STEM opportunity, sorted by what closes next.";
 
 export const HOME_LEAD =
-  "A researched database of real STEM opportunities for grades 6–12 — competitions, research, internships, camps, scholarships — matched to you, not generated on the spot.";
+  "A researched database of STEM opportunities for grades 6–12: competitions, research programs, internships, camps, and scholarships, each one read from its official site with the deadline, eligibility, and cost in one record.";

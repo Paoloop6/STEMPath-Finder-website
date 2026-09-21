@@ -36,7 +36,7 @@ export function UniversityLogo({
     return (
       <span
         style={style}
-        className={`inline-flex shrink-0 items-center justify-center rounded-lg bg-white/10 text-[10px] font-bold text-foreground ${className}`}
+        className={`inline-flex shrink-0 items-center justify-center rounded-lg bg-[var(--surface-subtle)] text-[10px] font-bold text-foreground ${className}`}
         role="img"
         aria-label="Unknown university"
       >
