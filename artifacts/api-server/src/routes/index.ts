@@ -7,6 +7,7 @@ import candidatesRouter from "./candidates";
 import pathwaysRouter from "./pathways";
 import dynamoOpportunitiesRouter from "./opportunities-dynamo";
 import sitemapRouter from "./sitemap";
+import studentVideosRouter from "./student-videos";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(matchRouter);
 router.use(adminRouter);
 router.use(candidatesRouter);
 router.use(pathwaysRouter);
+router.use(studentVideosRouter);
 
 export default router;
