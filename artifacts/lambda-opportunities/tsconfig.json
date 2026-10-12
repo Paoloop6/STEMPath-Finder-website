@@ -3,7 +3,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"]
+    "types": ["node"],
+    // Tests run directly through node --test --experimental-strip-types, which
+    // resolves real file paths, so their relative imports carry a .ts suffix.
+    "allowImportingTsExtensions": true
   },
   "include": ["src"]
 }

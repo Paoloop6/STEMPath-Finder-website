@@ -1,18 +1,28 @@
 // Lambda: stempath-daily-opportunities
 //
-// Daily STEM opportunity discovery, optimized for novelty:
+// Daily STEM opportunity discovery, driven by a target rather than a fixed cap:
 //   1. Load the existing opportunity index from DynamoDB (canonical URLs,
 //      title+org fingerprints, domains, lastCheckedAt, deadlines).
-//   2. Run rotating Exa query groups (3 of 6 per day, phrasing varied daily).
+//   2. Run rotating Exa query groups in bounded parallel. Each discovery pass
+//      uses a disjoint slice of the group list and a shifted phrasing variation.
 //   3. Canonicalize + classify every result BEFORE DeepSeek; recurring and
 //      low-value URLs never consume model budget.
-//   4. Budget: 75% new URLs / 20% due-for-recheck / 5% deadline-sensitive,
-//      with unused recheck capacity flowing back to new URLs.
+//   4. Per pass, budget 75% new URLs / 20% due-for-recheck / 5% deadline
+//      sensitive, sized from how many valid discoveries are still missing.
 //   5. Persist with stable canonical-URL PKs; rediscoveries preserve
 //      createdAt/review state; near-duplicate titles link as
 //      alternateSourceUrls instead of new records.
+//   6. Repeat up to MAX_DISCOVERY_PASSES until TARGET_VALID_DISCOVERIES is met,
+//      the extraction ceiling is hit, or the wall-clock budget runs out.
 //
-// Dry-run: {"trigger":"discovery-dry-run","limit":50,"write":false}
+// Deadline handling lives in ./deadline.ts. It deliberately keeps annually
+// recurring programs whose page still shows last cycle's date; the previous
+// Date.parse comparison discarded roughly half of every run's output.
+//
+// Discovery never publishes. New records are written reviewStatus "pending",
+// published false, and only a human reviewer promotes them.
+//
+// Dry-run: {"trigger":"discovery-dry-run","write":false}
 //   → Exa + classification only; no DeepSeek, no DynamoDB, no S3 writes.
 //
 // HARD RULE: never contacts ecdatabase.org or any subdomain.
@@ -38,6 +48,8 @@ import {
   queriesForDay,
   SIMILARITY_THRESHOLD,
 } from "./discovery";
+import { judgeDeadline } from "./deadline";
+import { failures, mapLimit, successes, TimeBudget } from "./concurrency";
 
 // ---------------------------------------------------------------------------
 // Environment + safety
@@ -71,6 +83,28 @@ const EXA_ENDPOINT = "https://api.exa.ai/search";
 const EXA_TIMEOUT_MS = 30000;
 const MAX_SOURCE_CHARACTERS = 12000;
 const RESULTS_PER_QUERY = 10;
+
+// --- run shape ------------------------------------------------------------
+// Concurrency values are conservative starting points (see PART 6); they are
+// env-overridable so they can be tuned against real provider limits without a
+// redeploy.
+const SEARCH_CONCURRENCY = Number(process.env["SEARCH_CONCURRENCY"] ?? 4);
+const EXTRACT_CONCURRENCY = Number(process.env["EXTRACT_CONCURRENCY"] ?? 5);
+
+/** Useful new candidate opportunities we aim to produce per day. */
+const TARGET_VALID_DISCOVERIES = Number(process.env["TARGET_VALID_DISCOVERIES"] ?? 50);
+/** Hard stop on discovery passes so the controller can never loop forever. */
+const MAX_DISCOVERY_PASSES = Number(process.env["MAX_DISCOVERY_PASSES"] ?? 3);
+/** Cost ceiling: the most pages we will ever send to the extraction model in one run. */
+const MAX_EXTRACTIONS_PER_RUN = Number(process.env["MAX_EXTRACTIONS_PER_RUN"] ?? 220);
+/**
+ * Wall-clock budget. The Lambda timeout is 900s; we stop at 780s and keep the
+ * remainder for persistence and the audit artifact, so a long run finishes
+ * cleanly rather than being killed mid-write.
+ */
+const RUN_BUDGET_MS = Number(process.env["RUN_BUDGET_MS"] ?? 780_000);
+/** Headroom reserved for persist + S3 upload before starting more work. */
+const WRAPUP_RESERVE_MS = 90_000;
 
 const EXCLUDED_DOMAINS = [
   "ecdatabase.org", "reddit.com", "quora.com", "wikipedia.org", "youtube.com",
@@ -299,34 +333,54 @@ function classifyExisting(existing: ExistingRecord, now: number): Classification
 // Handler
 // ---------------------------------------------------------------------------
 
-type LambdaEvent = { trigger?: string; limit?: number; write?: boolean };
+type LambdaEvent = {
+  trigger?: string;
+  /** Overrides the extraction ceiling for a single invocation (testing). */
+  limit?: number;
+  write?: boolean;
+  /** Overrides TARGET_VALID_DISCOVERIES for a single invocation. */
+  target?: number;
+};
+
+type PassOutcome = {
+  pass: number;
+  queries: number;
+  documentsDiscovered: number;
+  newCandidateUrls: number;
+  sentToExtraction: number;
+  storedNew: number;
+  searchMs: number;
+  extractMs: number;
+};
 
 export async function handler(event: LambdaEvent = {}) {
+  const startedAt = Date.now();
+  const budget = new TimeBudget(RUN_BUDGET_MS, startedAt);
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
   const now = Date.now();
-  const defaultLimit = Number(process.env["OPPORTUNITY_SEARCH_LIMIT"] ?? 5);
-  const limit = Math.max(1, Math.min(50, event.limit ?? defaultLimit));
+
+  const extractionCeiling = Math.max(
+    1,
+    Math.min(MAX_EXTRACTIONS_PER_RUN, event.limit ?? MAX_EXTRACTIONS_PER_RUN),
+  );
+  const target = Math.max(1, event.target ?? TARGET_VALID_DISCOVERIES);
   const dryRun = event.write === false || event.trigger === "discovery-dry-run";
   const exaApiKey = requireEnv("EXA_API_KEY");
 
-  console.log(JSON.stringify({ runId, trigger: event.trigger ?? "unknown", limit, dryRun }));
+  console.log(
+    JSON.stringify({
+      runId,
+      trigger: event.trigger ?? "unknown",
+      target,
+      extractionCeiling,
+      dryRun,
+    }),
+  );
 
   const errors: string[] = [];
   const index = await loadExistingIndex();
 
-  // --- discover ------------------------------------------------------------
-  const dayIndex = Math.floor(now / DAY_MS);
-  const queries = queriesForDay(dayIndex);
-  const discovered: ExaDoc[] = [];
-  for (const { group, query } of queries) {
-    try {
-      discovered.push(...(await exaSearch(exaApiKey, group, query)));
-    } catch (error) {
-      errors.push(`exa:${group}: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  // --- classify ------------------------------------------------------------
+  // Counters accumulate across every pass.
   const counts: Record<Classification, number> = {
     new_url: 0,
     duplicate_within_run: 0,
@@ -338,97 +392,291 @@ export async function handler(event: LambdaEvent = {}) {
     rejected_low_quality_domain: 0,
   };
   const seenThisRun = new Set<string>();
-  const classified: ClassifiedDoc[] = [];
   const domainTally: Record<string, number> = {};
+  const domainUsed: Record<string, number> = {};
+  const allClassified: ClassifiedDoc[] = [];
+  const allSelected: ClassifiedDoc[] = [];
+  const allExtracted: Array<{ record: Record<string, unknown>; item: ClassifiedDoc }> = [];
+  const passes: PassOutcome[] = [];
+  const groupsUsed = new Set<string>();
+  const deadlineReasons: Record<string, number> = {};
 
-  for (const doc of discovered) {
-    const canonicalUrl = canonicalizeUrl(doc.url);
-    if (!canonicalUrl) continue;
-    const domain = domainOf(canonicalUrl);
-    domainTally[domain] = (domainTally[domain] ?? 0) + 1;
+  let totalDiscovered = 0;
+  let totalSearchMs = 0;
+  let totalExtractMs = 0;
+  let extractionsUsed = 0;
+  let validDiscoveries = 0;
+  let newInserts = 0;
+  let contentUpdates = 0;
+  let unchangedChecked = 0;
+  let rejectedExpired = 0;
+  let rejectedNonStem = 0;
+  let retainedStaleDeadline = 0;
+  let extractionFailures = 0;
+  let alternateLinksAdded = 0;
+  // Set when a pass loop exits early; otherwise resolved after the loop.
+  let stopReason: string | null = null;
 
-    let classification: Classification;
-    let existing = index.byCanonicalUrl.get(canonicalUrl);
+  const dayIndex = Math.floor(now / DAY_MS);
+  const perDomainCap = (domain: string) => (domain.endsWith(".edu") ? 5 : 3);
+  const nowIso = new Date().toISOString();
+  const contentHashOf = (record: Record<string, unknown>) => sha256Hex(JSON.stringify(record));
 
-    if (seenThisRun.has(canonicalUrl)) {
-      classification = "duplicate_within_run";
-    } else if (LOW_VALUE_DOMAINS.has(domain)) {
-      classification = "rejected_low_quality_domain";
-    } else if (existing) {
-      classification = classifyExisting(existing, now);
-    } else {
-      // Similarity dedup: same program under a different URL links to the
-      // existing record instead of becoming a second opportunity.
-      const fingerprint = normalizeTitleOrg(doc.title, domain);
-      let best: { fp: string; sim: number } | undefined;
-      for (const fp of index.fingerprints) {
-        const sim = fingerprintSimilarity(fingerprint, fp);
-        if (!best || sim > best.sim) best = { fp, sim };
-      }
-      if (best && best.sim >= SIMILARITY_THRESHOLD) {
-        classification = "duplicate_title_organization";
-        existing = index.byFingerprint.get(best.fp);
+  // Observed extraction yield, used to size each pass. Seeded from the measured
+  // post-fix rate and then replaced by this run's own numbers.
+  let yieldEstimate = 0.7;
+
+  for (let pass = 0; pass < MAX_DISCOVERY_PASSES; pass++) {
+    if (validDiscoveries >= target) {
+      stopReason = "target_reached";
+      break;
+    }
+    if (extractionsUsed >= extractionCeiling) {
+      stopReason = "extraction_ceiling";
+      break;
+    }
+    if (!budget.hasRoom(WRAPUP_RESERVE_MS)) {
+      stopReason = "time_budget";
+      break;
+    }
+
+    // --- search (bounded parallel) -----------------------------------------
+    const queries = queriesForDay(dayIndex, pass);
+    for (const q of queries) groupsUsed.add(q.group);
+    const searchStarted = Date.now();
+    const searchResults = await mapLimit(queries, SEARCH_CONCURRENCY, ({ group, query }) =>
+      exaSearch(exaApiKey, group, query),
+    );
+    const passSearchMs = Date.now() - searchStarted;
+    totalSearchMs += passSearchMs;
+    for (const message of failures(searchResults)) errors.push(`exa: ${message}`);
+    const discovered = successes(searchResults).flat();
+    totalDiscovered += discovered.length;
+
+    // --- classify -----------------------------------------------------------
+    const classified: ClassifiedDoc[] = [];
+    for (const doc of discovered) {
+      const canonicalUrl = canonicalizeUrl(doc.url);
+      if (!canonicalUrl) continue;
+      const domain = domainOf(canonicalUrl);
+      domainTally[domain] = (domainTally[domain] ?? 0) + 1;
+
+      let classification: Classification;
+      let existing = index.byCanonicalUrl.get(canonicalUrl);
+
+      if (seenThisRun.has(canonicalUrl)) {
+        classification = "duplicate_within_run";
+      } else if (LOW_VALUE_DOMAINS.has(domain)) {
+        classification = "rejected_low_quality_domain";
+      } else if (existing) {
+        classification = classifyExisting(existing, now);
       } else {
-        classification = "new_url";
+        const fingerprint = normalizeTitleOrg(doc.title, domain);
+        let best: { fp: string; sim: number } | undefined;
+        for (const fp of index.fingerprints) {
+          const sim = fingerprintSimilarity(fingerprint, fp);
+          if (!best || sim > best.sim) best = { fp, sim };
+        }
+        if (best && best.sim >= SIMILARITY_THRESHOLD) {
+          classification = "duplicate_title_organization";
+          existing = index.byFingerprint.get(best.fp);
+        } else {
+          classification = "new_url";
+        }
+      }
+      seenThisRun.add(canonicalUrl);
+      counts[classification] += 1;
+
+      const textLower = `${doc.title} ${doc.text.slice(0, 3000)}`.toLowerCase();
+      const score = noveltyScore({
+        isNewCanonicalUrl: !existing,
+        isNewOrganization: !index.organizations.has(domain),
+        isNewDomain: !index.domains.has(domain),
+        publishedRecently: daysSince(doc.publishedDate ?? undefined, now) < 180,
+        applicationOpen:
+          textLower.includes("apply now") ||
+          textLower.includes("application") ||
+          textLower.includes("register"),
+        gradeRelevant: /grade|9th|10th|11th|12th|high school/.test(textLower),
+        texasRelevant: /houston|texas/.test(textLower),
+        officialSource: isOfficialDomain(domain),
+        duplicateTitleSimilarity: classification === "duplicate_title_organization" ? 1 : 0,
+        recentlyChecked: classification === "existing_recently_checked",
+        lowValueDomain: LOW_VALUE_DOMAINS.has(domain),
+        expiredOrNoDeadline: classification === "existing_expired",
+      });
+      const entry: ClassifiedDoc = { doc, canonicalUrl, classification, existing, score };
+      classified.push(entry);
+      allClassified.push(entry);
+    }
+
+    // --- budget selection ---------------------------------------------------
+    // Size this pass from what is still missing, adjusted by the observed yield,
+    // and clamp to the remaining cost ceiling.
+    const stillNeeded = Math.max(0, target - validDiscoveries);
+    const wanted = Math.ceil(stillNeeded / Math.max(0.2, yieldEstimate));
+    const passBudget = Math.max(0, Math.min(wanted, extractionCeiling - extractionsUsed));
+    if (passBudget === 0) {
+      stopReason = "extraction_ceiling";
+      break;
+    }
+
+    const pickTop = (pool: ClassifiedDoc[], slots: number, capDomains: boolean) => {
+      const picked: ClassifiedDoc[] = [];
+      for (const item of [...pool].sort((a, b) => b.score - a.score)) {
+        if (picked.length >= slots) break;
+        const domain = domainOf(item.canonicalUrl);
+        if (capDomains) {
+          const used = domainUsed[domain] ?? 0;
+          if (used >= perDomainCap(domain)) continue;
+          domainUsed[domain] = used + 1;
+        }
+        picked.push(item);
+      }
+      return picked;
+    };
+
+    const newPool = classified.filter((c) => c.classification === "new_url");
+    const recheckPool = classified.filter((c) => c.classification === "existing_due_for_recheck");
+    const deadlinePool = classified.filter(
+      (c) => c.classification === "existing_deadline_approaching",
+    );
+
+    const pickedDeadline = pickTop(deadlinePool, Math.max(0, Math.floor(passBudget * 0.05)), false);
+    const pickedRecheck = pickTop(recheckPool, Math.max(0, Math.floor(passBudget * 0.2)), false);
+    const pickedNew = pickTop(
+      newPool,
+      passBudget - pickedDeadline.length - pickedRecheck.length,
+      true,
+    );
+    const toProcess = [...pickedNew, ...pickedRecheck, ...pickedDeadline];
+    allSelected.push(...toProcess);
+
+    if (dryRun) {
+      passes.push({
+        pass,
+        queries: queries.length,
+        documentsDiscovered: discovered.length,
+        newCandidateUrls: newPool.length,
+        sentToExtraction: toProcess.length,
+        storedNew: 0,
+        searchMs: passSearchMs,
+        extractMs: 0,
+      });
+      // A dry run measures discovery only; nothing is extracted or written.
+      extractionsUsed += toProcess.length;
+      continue;
+    }
+
+    // --- extract (bounded parallel, per-item error isolation) ---------------
+    const extractStarted = Date.now();
+    const extractionResults = await mapLimit(toProcess, EXTRACT_CONCURRENCY, (item) =>
+      structureWithDeepSeek(item.doc).then((record) => ({ record, item })),
+    );
+    const passExtractMs = Date.now() - extractStarted;
+    totalExtractMs += passExtractMs;
+    extractionsUsed += toProcess.length;
+    for (const message of failures(extractionResults)) {
+      extractionFailures += 1;
+      errors.push(`deepseek: ${message}`);
+    }
+    const extracted = successes(extractionResults);
+    allExtracted.push(...extracted);
+
+    // --- validate + persist -------------------------------------------------
+    const items: Record<string, unknown>[] = [];
+    let passStored = 0;
+    for (const { record, item } of extracted) {
+      const stemFields = Array.isArray(record["stem_fields"]) ? record["stem_fields"] : [];
+      if (item.classification === "new_url" && stemFields.length === 0) {
+        rejectedNonStem += 1;
+        continue;
+      }
+
+      const verdict = judgeDeadline(
+        record["application_deadline"],
+        record["application_status"],
+        now,
+      );
+      deadlineReasons[verdict.reason] = (deadlineReasons[verdict.reason] ?? 0) + 1;
+      if (item.classification === "new_url" && verdict.reject) {
+        rejectedExpired += 1;
+        continue;
+      }
+      if (verdict.staleDeadline) retainedStaleDeadline += 1;
+
+      const pk = item.existing?.PK ?? `OPPORTUNITY#${sha256Hex(item.canonicalUrl).slice(0, 16)}`;
+      const existing = await getItem({ PK: pk, SK: "OPPORTUNITY" });
+      const hash = contentHashOf(record);
+      const changed = !existing || existing["contentHash"] !== hash;
+      if (!existing) {
+        newInserts += 1;
+        passStored += 1;
+      } else if (changed) {
+        contentUpdates += 1;
+      } else {
+        unchangedChecked += 1;
+      }
+
+      items.push({
+        PK: pk,
+        SK: "OPPORTUNITY",
+        entityType: "opportunity",
+        ...record,
+        source_url: item.canonicalUrl,
+        discovery_category: item.doc.group,
+        alternateSourceUrls: (existing?.["alternateSourceUrls"] as string[] | undefined) ?? [],
+        contentHash: hash,
+        runId,
+        // Discovery never publishes. Everything new lands in the review queue.
+        reviewStatus: existing?.["reviewStatus"] ?? "pending",
+        published: existing?.["published"] ?? false,
+        // Recorded so a reviewer can see a past deadline was kept deliberately.
+        deadlineAssessment: verdict.reason,
+        deadlineIsStale: verdict.staleDeadline,
+        createdAt: existing?.["createdAt"] ?? nowIso,
+        updatedAt: changed ? nowIso : (existing?.["updatedAt"] ?? nowIso),
+        lastCheckedAt: nowIso,
+      });
+    }
+
+    if (items.length > 0) {
+      try {
+        await batchWriteWithRetry(items.map((put) => ({ put })));
+      } catch (error) {
+        errors.push(`dynamo: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
-    seenThisRun.add(canonicalUrl);
-    counts[classification] += 1;
 
-    const textLower = `${doc.title} ${doc.text.slice(0, 3000)}`.toLowerCase();
-    const score = noveltyScore({
-      isNewCanonicalUrl: !existing,
-      isNewOrganization: !index.organizations.has(domain),
-      isNewDomain: !index.domains.has(domain),
-      publishedRecently: daysSince(doc.publishedDate ?? undefined, now) < 180,
-      applicationOpen: textLower.includes("apply now") || textLower.includes("application") || textLower.includes("register"),
-      gradeRelevant: /grade|9th|10th|11th|12th|high school/.test(textLower),
-      texasRelevant: /houston|texas/.test(textLower),
-      officialSource: isOfficialDomain(domain),
-      duplicateTitleSimilarity: classification === "duplicate_title_organization" ? 1 : 0,
-      recentlyChecked: classification === "existing_recently_checked",
-      lowValueDomain: LOW_VALUE_DOMAINS.has(domain),
-      expiredOrNoDeadline: classification === "existing_expired",
+    validDiscoveries += passStored;
+    if (toProcess.length > 0) {
+      // Blend so a single small pass cannot swing the estimate wildly.
+      yieldEstimate = (yieldEstimate + passStored / toProcess.length) / 2;
+    }
+
+    passes.push({
+      pass,
+      queries: queries.length,
+      documentsDiscovered: discovered.length,
+      newCandidateUrls: newPool.length,
+      sentToExtraction: toProcess.length,
+      storedNew: passStored,
+      searchMs: passSearchMs,
+      extractMs: passExtractMs,
     });
-    classified.push({ doc, canonicalUrl, classification, existing, score });
+
   }
 
-  // --- budget selection ----------------------------------------------------
-  // 75% new / 20% recheck / 5% deadline-sensitive; unused recheck capacity
-  // flows to new URLs; recurring results never eat the new-URL allocation.
-  const perDomainCap = (domain: string) => (domain.endsWith(".edu") ? 5 : 3);
-  const domainUsed: Record<string, number> = {};
-  const pickTop = (pool: ClassifiedDoc[], budget: number, capDomains: boolean) => {
-    const picked: ClassifiedDoc[] = [];
-    for (const item of [...pool].sort((a, b) => b.score - a.score)) {
-      if (picked.length >= budget) break;
-      const domain = domainOf(item.canonicalUrl);
-      if (capDomains) {
-        const used = domainUsed[domain] ?? 0;
-        if (used >= perDomainCap(domain)) continue;
-        domainUsed[domain] = used + 1;
-      }
-      picked.push(item);
-    }
-    return picked;
-  };
+  if (stopReason === null) {
+    // The loop ran to completion rather than breaking out.
+    if (dryRun) stopReason = "dry_run_all_passes";
+    else if (validDiscoveries >= target) stopReason = "target_reached";
+    else stopReason = "max_passes";
+  }
 
-  const newPool = classified.filter((c) => c.classification === "new_url");
-  const recheckPool = classified.filter((c) => c.classification === "existing_due_for_recheck");
-  const deadlinePool = classified.filter((c) => c.classification === "existing_deadline_approaching");
-
-  const deadlineBudget = Math.max(0, Math.floor(limit * 0.05));
-  const recheckBudget = Math.max(0, Math.floor(limit * 0.2));
-  const pickedDeadline = pickTop(deadlinePool, deadlineBudget, false);
-  const pickedRecheck = pickTop(recheckPool, recheckBudget, false);
-  const newBudget = limit - pickedDeadline.length - pickedRecheck.length;
-  const pickedNew = pickTop(newPool, newBudget, true);
-  const toProcess = [...pickedNew, ...pickedRecheck, ...pickedDeadline];
-
-  // --- link near-duplicates as alternate sources (no new records) ----------
-  let alternateLinksAdded = 0;
+  // --- link near-duplicates as alternate sources (no new records) -----------
   if (!dryRun) {
-    for (const item of classified) {
+    for (const item of allClassified) {
       if (item.classification !== "duplicate_title_organization" || !item.existing) continue;
       const existingAlternates = item.existing.alternateSourceUrls ?? [];
       if (existingAlternates.includes(item.canonicalUrl)) continue;
@@ -447,28 +695,35 @@ export async function handler(event: LambdaEvent = {}) {
     }
   }
 
+  const totalMs = Date.now() - startedAt;
+  const uniqueDomains = new Set(allClassified.map((c) => domainOf(c.canonicalUrl)));
   const topRepeatedDomains = Object.entries(domainTally)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
     .map(([domain, count]) => `${domain}:${count}`);
 
   const discoverySummary = {
-    documentsDiscovered: discovered.length,
+    passesRun: passes.length,
+    stopReason,
+    documentsDiscovered: totalDiscovered,
     uniqueCanonicalUrls: seenThisRun.size,
+    uniqueDomains: uniqueDomains.size,
     duplicateWithinRun: counts.duplicate_within_run,
     duplicateExistingUrl:
-      counts.existing_recently_checked + counts.existing_due_for_recheck +
-      counts.existing_deadline_approaching + counts.existing_expired,
+      counts.existing_recently_checked +
+      counts.existing_due_for_recheck +
+      counts.existing_deadline_approaching +
+      counts.existing_expired,
     duplicateTitleOrganization: counts.duplicate_title_organization,
     existingRecentlyChecked: counts.existing_recently_checked,
     existingDueForRecheck: counts.existing_due_for_recheck,
     existingDeadlineSensitive: counts.existing_deadline_approaching,
     rejectedLowQualityDomain: counts.rejected_low_quality_domain,
     newCandidateUrls: counts.new_url,
-    newUrlsSentToDeepSeek: pickedNew.length,
-    existingUrlsSentToDeepSeek: pickedRecheck.length + pickedDeadline.length,
+    sentToExtraction: allSelected.length,
     topRepeatedDomains,
-    queryGroupsUsed: [...new Set(queries.map((q) => q.group))],
+    queryGroupsUsed: [...groupsUsed],
+    perPass: passes,
   };
 
   if (dryRun) {
@@ -477,121 +732,68 @@ export async function handler(event: LambdaEvent = {}) {
       runId,
       mode: "discovery-dry-run",
       ...discoverySummary,
-      projectedDeepSeekCalls: toProcess.length,
-      projectedNewInserts: pickedNew.length,
+      projectedExtractionCalls: allSelected.length,
+      searchMs: totalSearchMs,
+      totalMs,
       errors,
     };
     console.log(JSON.stringify(result));
     return result;
   }
 
-  // --- audit artifact ------------------------------------------------------
+  // --- audit artifacts -----------------------------------------------------
   const rawKey = `opportunities/runs/${runId}/raw.json`;
-  await uploadJson(rawKey, {
-    runId,
-    limit,
-    summary: discoverySummary,
-    classifications: classified.map((c) => ({
-      url: c.canonicalUrl,
-      classification: c.classification,
-      score: c.score,
-      selected: toProcess.includes(c),
-    })),
-    documents: toProcess.map((c) => ({ ...c.doc, canonicalUrl: c.canonicalUrl })),
-  });
-
-  // --- structure (concurrency 5) -------------------------------------------
-  type Extracted = { record: Record<string, unknown>; item: ClassifiedDoc };
-  const extracted: Extracted[] = [];
-  let deepSeekFailures = 0;
-  let cursor = 0;
-  await Promise.all(
-    Array.from({ length: Math.min(5, toProcess.length) }, async () => {
-      while (cursor < toProcess.length) {
-        const item = toProcess[cursor]!;
-        cursor += 1;
-        try {
-          const record = await structureWithDeepSeek(item.doc);
-          extracted.push({ record, item });
-        } catch (error) {
-          deepSeekFailures += 1;
-          errors.push(`deepseek:${item.canonicalUrl}: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      }
-    }),
-  );
-
   const extractedKey = `opportunities/runs/${runId}/extracted.json`;
-  await uploadJson(extractedKey, {
-    runId,
-    extracted: extracted.map((e) => ({ ...e.record, source_url: e.item.canonicalUrl, discovery_category: e.item.doc.group })),
-  });
-
-  // --- persist (history-preserving) ----------------------------------------
-  const nowIso = new Date().toISOString();
-  const contentHashOf = (record: Record<string, unknown>) => sha256Hex(JSON.stringify(record));
-  let newInserts = 0;
-  let contentUpdates = 0;
-  let unchangedChecked = 0;
-  let rejectedExpired = 0;
-  let rejectedNonStem = 0;
-  const items: Record<string, unknown>[] = [];
-
-  for (const { record, item } of extracted) {
-    const stemFields = Array.isArray(record["stem_fields"]) ? record["stem_fields"] : [];
-    if (item.classification === "new_url" && stemFields.length === 0) {
-      rejectedNonStem += 1;
-      continue;
-    }
-    const deadline = typeof record["application_deadline"] === "string" ? Date.parse(record["application_deadline"]) : NaN;
-    if (item.classification === "new_url" && !Number.isNaN(deadline) && deadline < now - DAY_MS) {
-      rejectedExpired += 1;
-      continue;
-    }
-
-    const pk = item.existing?.PK ?? `OPPORTUNITY#${sha256Hex(item.canonicalUrl).slice(0, 16)}`;
-    const existing = await getItem({ PK: pk, SK: "OPPORTUNITY" });
-    const hash = contentHashOf(record);
-    const changed = !existing || existing["contentHash"] !== hash;
-    if (!existing) newInserts += 1;
-    else if (changed) contentUpdates += 1;
-    else unchangedChecked += 1;
-
-    items.push({
-      PK: pk,
-      SK: "OPPORTUNITY",
-      entityType: "opportunity",
-      ...record,
-      source_url: item.canonicalUrl,
-      discovery_category: item.doc.group,
-      alternateSourceUrls: (existing?.["alternateSourceUrls"] as string[] | undefined) ?? [],
-      contentHash: hash,
+  try {
+    await uploadJson(rawKey, {
       runId,
-      reviewStatus: existing?.["reviewStatus"] ?? "pending",
-      published: existing?.["published"] ?? false,
-      createdAt: existing?.["createdAt"] ?? nowIso,
-      updatedAt: changed ? nowIso : (existing?.["updatedAt"] ?? nowIso),
-      lastCheckedAt: nowIso,
+      target,
+      extractionCeiling,
+      summary: discoverySummary,
+      classifications: allClassified.map((c) => ({
+        url: c.canonicalUrl,
+        classification: c.classification,
+        score: c.score,
+        selected: allSelected.includes(c),
+      })),
+      documents: allSelected.map((c) => ({ ...c.doc, canonicalUrl: c.canonicalUrl })),
     });
+    await uploadJson(extractedKey, {
+      runId,
+      extracted: allExtracted.map((e) => ({
+        ...e.record,
+        source_url: e.item.canonicalUrl,
+        discovery_category: e.item.doc.group,
+      })),
+    });
+  } catch (error) {
+    errors.push(`s3: ${error instanceof Error ? error.message : String(error)}`);
   }
-  const written = items.length > 0 ? await batchWriteWithRetry(items.map((put) => ({ put }))) : 0;
 
+  const minutes = totalMs / 60_000;
   const result = {
     ok: errors.length === 0,
     runId,
     trigger: event.trigger ?? "unknown",
     ...discoverySummary,
-    dynamoItemsWritten: written,
+    target,
+    validDiscoveries,
     newInserts,
     contentUpdates,
     unchangedChecked,
     alternateLinksAdded,
     rejectedExpired,
     rejectedNonStem,
-    deepSeekFailures,
+    retainedStaleDeadline,
+    deadlineReasons,
+    extractionFailures,
+    searchMs: totalSearchMs,
+    extractMs: totalExtractMs,
+    totalMs,
+    opportunitiesPerMinute: minutes > 0 ? Number((validDiscoveries / minutes).toFixed(2)) : 0,
     s3RawKey: rawKey,
     s3ExtractedKey: extractedKey,
-    errors,
+    errors: errors.slice(0, 50),
   };
   console.log(JSON.stringify(result));
   return result;

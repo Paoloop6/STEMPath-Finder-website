@@ -163,7 +163,93 @@ export const QUERY_GROUPS: Record<string, string[]> = {
     "robotics grant students",
     "research scholarship teenagers",
   ],
+  // --- added for source and subject diversity (see SOURCE_FAMILIES below) ---
+  "G-computing-ai": [
+    "high school artificial intelligence summer academy",
+    "teen coding bootcamp free application",
+    "high school data science program application",
+    "cybersecurity program high school students",
+    "game development camp teenagers",
+  ],
+  "H-physical-sciences": [
+    "high school physics summer program",
+    "high school chemistry research opportunity",
+    "astronomy program high school students",
+    "materials science outreach high school",
+    "high school mathematics summer institute",
+  ],
+  "I-government-national-lab": [
+    "site:.gov high school internship science",
+    "national laboratory high school internship",
+    "NASA high school student program",
+    "NOAA student opportunities high school",
+    "Department of Energy high school program",
+  ],
+  "J-museums-nonprofits": [
+    "science museum teen program application",
+    "aquarium youth volunteer program",
+    "zoo teen conservation program",
+    "nonprofit STEM mentorship high school",
+    "botanical garden youth science program",
+  ],
+  "K-engineering-industry": [
+    "engineering company high school internship program",
+    "technology company student apprenticeship high school",
+    "aerospace high school summer program",
+    "civil engineering camp high school students",
+    "biotech high school internship program",
+  ],
+  "L-environment-earth": [
+    "environmental science program high school students",
+    "marine biology program teenagers",
+    "climate research high school internship",
+    "field ecology summer program high school",
+    "geology summer program high school students",
+  ],
 };
+
+/**
+ * Prioritisation signals for internal links found while mapping a source site.
+ *
+ * These raise a URL's place in the frontier. They are NOT an allowlist: links
+ * that match nothing here are still queued, just at lower priority, so a site's
+ * genuinely useful pages are never structurally invisible to the crawler.
+ */
+export const URL_PRIORITY_PATTERNS: Array<{ pattern: RegExp; weight: number }> = [
+  { pattern: /\b(apply|application|admissions?|register|registration)\b/i, weight: 5 },
+  { pattern: /\b(eligibility|requirements?|who-can-apply|qualifications?)\b/i, weight: 5 },
+  { pattern: /\b(deadline|dates?|calendar|timeline|important-dates)\b/i, weight: 5 },
+  { pattern: /\b(tuition|cost|fees?|pricing|financial-aid|scholarships?)\b/i, weight: 4 },
+  { pattern: /\b(faq|frequently-asked)\b/i, weight: 3 },
+  { pattern: /\b(program|programs|opportunit|internship|fellowship)\b/i, weight: 4 },
+  { pattern: /\b(summer|pre-college|precollege|academy|camp|institute)\b/i, weight: 3 },
+  { pattern: /\b(high-?school|highschool|teen|youth|grades?-?9|k-?12)\b/i, weight: 4 },
+  { pattern: /\b(research|laboratory|lab|reu)\b/i, weight: 3 },
+  { pattern: /\b(stem|engineering|science|robotics|computer-?science|coding)\b/i, weight: 3 },
+  { pattern: /\b(medicine|medical|health|biology|chemistry|physics|math)\b/i, weight: 3 },
+  { pattern: /\b(volunteer|competition|contest|challenge|mentorship)\b/i, weight: 3 },
+  { pattern: /\b(students?|outreach|education|k12)\b/i, weight: 2 },
+];
+
+/** Priority score for a discovered internal URL. Higher is crawled sooner. */
+export function urlPriority(url: string, crawlDepth: number): number {
+  let score = 10 - crawlDepth * 2; // shallower pages first, all else equal
+  const path = (() => {
+    try {
+      return new URL(url).pathname.toLowerCase();
+    } catch {
+      return url.toLowerCase();
+    }
+  })();
+  for (const { pattern, weight } of URL_PRIORITY_PATTERNS) {
+    if (pattern.test(path)) score += weight;
+  }
+  // Deprioritise obvious non-content paths without excluding them outright.
+  if (/\b(news|blog|events?|archive|press|staff|directory|login|account|cart)\b/.test(path)) {
+    score -= 4;
+  }
+  return score;
+}
 
 const QUERY_VARIATIONS = [
   (year: number) => `${year}`,
@@ -179,15 +265,35 @@ const QUERY_VARIATIONS = [
   () => "national",
 ];
 
-/** Pick 3 of the 6 groups for the given day and vary each query's phrasing. */
-export function queriesForDay(dayIndex: number): Array<{ group: string; query: string }> {
+/** Groups used per discovery pass. Kept small so one pass stays fast. */
+export const GROUPS_PER_PASS = 4;
+
+/**
+ * Queries for one discovery pass.
+ *
+ * Pass 0 keeps the historical selection so day-to-day results stay comparable.
+ * Later passes (only run when the daily target has not been met) walk to a
+ * disjoint slice of the group list and shift the phrasing variation, so a second
+ * pass explores genuinely different ground rather than repeating the first.
+ */
+export function queriesForDay(
+  dayIndex: number,
+  pass = 0,
+): Array<{ group: string; query: string }> {
   const groupNames = Object.keys(QUERY_GROUPS);
   const year = new Date().getFullYear();
-  const selected = [0, 2, 4].map((offset) => groupNames[(dayIndex + offset) % groupNames.length]!);
+  const selected: string[] = [];
+  for (let i = 0; i < GROUPS_PER_PASS; i++) {
+    // Stride by GROUPS_PER_PASS per pass so passes do not overlap.
+    const offset = dayIndex + pass * GROUPS_PER_PASS + i * 2;
+    const name = groupNames[offset % groupNames.length]!;
+    if (!selected.includes(name)) selected.push(name);
+  }
   const queries: Array<{ group: string; query: string }> = [];
   for (const group of selected) {
     for (const [queryIndex, base] of QUERY_GROUPS[group]!.entries()) {
-      const variation = QUERY_VARIATIONS[(dayIndex + queryIndex) % QUERY_VARIATIONS.length]!(year);
+      const variationIndex = dayIndex + queryIndex + pass * 3;
+      const variation = QUERY_VARIATIONS[variationIndex % QUERY_VARIATIONS.length]!(year);
       queries.push({ group, query: `${base} ${variation}` });
     }
   }
