@@ -41,6 +41,9 @@ export type NormalizedOpportunity = {
   timeCommitment: string | null;
   minAge: number | null;
   maxAge: number | null;
+  /** Precomputed coordinates from server-side geocoding (null until geocoded). */
+  lat: number | null;
+  lng: number | null;
   reviewStatus: string;
   published: boolean;
   createdAt: string | null;
@@ -186,6 +189,8 @@ export function normalizeOpportunity(
     timeCommitment: str(item["time_commitment"]),
     minAge: num(item["minimum_age"]),
     maxAge: num(item["maximum_age"]),
+    lat: num(item["lat"]),
+    lng: num(item["lng"]),
     reviewStatus: str(item["reviewStatus"]) ?? "pending",
     published: item["published"] === true,
     createdAt: str(item["createdAt"]),

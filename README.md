@@ -4,7 +4,7 @@ NextStep Database helps students in grades 6–12 find STEM programs they can ac
 
 **Live site:** [https://www.nextstepdatabase.fyi/](https://www.nextstepdatabase.fyi/)
 
-The project is called **STEMPath Finder** in the Congressional App Challenge video and in older source paths. This repository contains the website, server, schemas and opportunity-discovery code. It is a source snapshot; see [submission checks and limitations](docs/submission-checks.md) before assuming it matches every feature of the live deployment.
+The project is called **STEMPath Finder** in the Congressional App Challenge video and in older source paths. This repository contains the website, server, schemas and opportunity-discovery code. The submission version integrates the preserved public-site branch, including `GET /api/student-videos`, while retaining the newer Lambda discovery code. See [submission checks](docs/submission-checks.md).
 
 ## Related code
 
@@ -25,7 +25,7 @@ Student-video ingestion: separate daily Mac job
 
 The API normalizes DynamoDB opportunities, filters visibility/eligibility fields, and serves browsing and matching routes. PostgreSQL holds legacy opportunity/candidate tables and Express sessions. S3 holds raw/extracted ingestion artifacts outside Git. The Lambda searches with Exa, crawls sources, extracts structured fields with DeepSeek and deduplicates records. New discoveries are pending and unpublished. Admin status fields and controls exist, but their existence does not prove human review took place. Deadline checks/filtering exist; no deadline-notification feature is claimed.
 
-The YouTube code is a separate daily pipeline, not a component of the Lambda handler. The [student-video API route](https://github.com/Paoloop6/STEMPath-Finder-website/blob/original-public-main/artifacts/api-server/src/routes/student-videos.ts) is preserved on `original-public-main`; the default-branch snapshot does not mount it. Its source was recovered from the local project without outputs or transcripts. Supabase edge-function source is also retained as a separate implementation; the Express app does not invoke it. The OpenAPI specification covers the original API and does not fully describe the newer DynamoDB routes.
+The YouTube code is a separate daily pipeline, not a component of the Lambda handler. The [student-video API route](artifacts/api-server/src/routes/student-videos.ts) is mounted on `main` at `GET /api/student-videos`. Its source was recovered from the local project without outputs or transcripts. Supabase edge-function source is also retained as a separate implementation; the Express app does not invoke it. The OpenAPI specification covers the original API and does not fully describe the newer DynamoDB or Student Stories routes; see the route source for their response shapes.
 
 ## Folder structure
 

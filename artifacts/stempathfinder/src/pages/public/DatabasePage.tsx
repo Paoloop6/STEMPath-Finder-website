@@ -142,7 +142,7 @@ function DatabasePage() {
         instead if you&apos;d rather it narrow things down for you.
       </p>
 
-      <div className="mt-8 rounded-[12px] border border-border bg-[rgba(8,10,13,0.78)] p-4 backdrop-blur-sm sm:p-5">
+      <div className="mt-8 rounded-[12px] border border-border bg-card p-4 shadow-[0_1px_0_rgba(20,21,22,0.04),0_14px_28px_-20px_rgba(20,21,22,0.5)] sm:p-5">
         <div>
           <FieldLabel>Search</FieldLabel>
           <div className="relative">
@@ -217,9 +217,9 @@ function DatabasePage() {
         <div className="mt-2">
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className="border-t border-border py-5">
-              <div className="skeleton-shimmer h-5 w-2/5 rounded-md bg-white/10" />
-              <div className="skeleton-shimmer mt-2 h-3 w-1/4 rounded-md bg-white/10" />
-              <div className="skeleton-shimmer mt-3 h-3 w-3/5 rounded-md bg-white/10" />
+              <div className="skeleton-shimmer h-5 w-2/5 rounded-md" />
+              <div className="skeleton-shimmer mt-2 h-3 w-1/4 rounded-md" />
+              <div className="skeleton-shimmer mt-3 h-3 w-3/5 rounded-md" />
             </div>
           ))}
         </div>

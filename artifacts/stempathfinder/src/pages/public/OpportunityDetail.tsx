@@ -1,4 +1,5 @@
 import { Link, useParams } from "wouter";
+import { titleFromHistory } from "@/lib/open-transition";
 import { useQuery } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -213,7 +214,16 @@ export default function OpportunityDetail() {
       <MainLayout>
         <div className="max-w-5xl mx-auto px-4 py-8">
           <Skeleton className="h-6 w-32 mb-6" />
-          <Skeleton className="h-12 w-3/4 mb-4" />
+          {titleFromHistory() ? (
+            <h1
+              className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4"
+              style={{ viewTransitionName: "opp-title" }}
+            >
+              {titleFromHistory()}
+            </h1>
+          ) : (
+            <Skeleton className="h-12 w-3/4 mb-4" />
+          )}
           <Skeleton className="h-6 w-1/2 mb-8" />
           <Skeleton className="h-60 w-full" />
         </div>
@@ -342,7 +352,10 @@ export default function OpportunityDetail() {
             )}
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+          <h1
+            className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4"
+            style={{ viewTransitionName: "opp-title" }}
+          >
             {opportunity.title}
           </h1>
 

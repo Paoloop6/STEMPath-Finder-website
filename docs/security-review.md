@@ -4,8 +4,8 @@
 
 ## Scope and method
 
-- Website: all 17 commits reachable from all fetched refs, including `main` and `original-public-main`, covering 498 unique historical blobs plus commit messages and the cleaned current source.
-- iPhone: all five reachable commits, 37 unique historical blobs, commit messages and current source.
+- Website: all reachable commits from all fetched refs, including `main` and `original-public-main`, plus commit messages and the cleaned current source. The accompanying final history inventory records exact commit/blob/path counts after the submission tag.
+- iPhone: all reachable commits, commit messages and current source; final counts are in the accompanying iPhone history inventory.
 - The new YouTube files copied from the local project were also scanned before commit. Existing `.env` files and AWS credential stores were not copied or published.
 - Used `scripts/submission/scan-secrets.py`, a read-only search for credential assignments and recognizable AWS, Google/YouTube, OpenAI/DeepSeek/Anthropic-style, GitHub, Slack, JWT, private-key and credential-bearing-URL patterns. It also counts contents matching `api_key`, `secret`, `password`, `sk-`, `AKIA`, `ASIA`, `credential` and `token` keywords. Reports contain locations and SHA-256 fingerprints, never raw secrets.
 - Gitleaks installation/execution was attempted, but this Mac terminated the new executable. The reported result comes from the completed Python/Git scan, not Gitleaks.
@@ -36,4 +36,4 @@ The scanner also matches its own regex-definition source as a generic assignment
 
 Removed the generated 4.1 MB `api/_app.mjs` bundle, source-prompt attachments, and Supabase local CLI/project-link metadata from the current tracked tree. The Vercel build regenerates the bundle. `.gitignore` now excludes environment files except `.env.example`, dependency/build folders, raw data, transcripts, exports, videos, local AWS files and private-key files. The only `data/` file allowed is the fictional ten-record sample.
 
-**Git history was not rewritten and no force push was used.** Removed files still exist in old commits and in the preserved historical branch. Review those historical materials before making the repository public. If a credential is found later, revoke/rotate it in the owning service; deleting a current file alone does not revoke it.
+**Git history was not rewritten and no force push was used.** Removed files still exist in old commits and in the preserved historical branch. The final separate HTML/JSON history reports identify their exact locations, as well as the iPhone video metadata, location cache and historical user-state file. Review those historical materials before making the repository public. If a credential is found later, revoke/rotate it in the owning service; deleting a current file alone does not revoke it.

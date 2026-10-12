@@ -4,8 +4,8 @@ import { fetchLiveStats, formatLastUpdated } from '@/lib/live-stats';
 function StatSkeleton() {
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="skeleton-shimmer h-7 w-14 rounded-md bg-white/10" />
-      <div className="skeleton-shimmer h-3 w-24 rounded-md bg-white/10" />
+      <div className="skeleton-shimmer h-7 w-14 rounded-md" />
+      <div className="skeleton-shimmer h-3 w-24 rounded-md" />
     </div>
   );
 }

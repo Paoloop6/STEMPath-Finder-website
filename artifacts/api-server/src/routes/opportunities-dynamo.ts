@@ -43,13 +43,18 @@ router.get("/opportunities", async (req, res): Promise<void> => {
       keyword: q["keyword"] || q["search"],
       includeExpired: q["includeExpired"] === "true",
     });
-    console.log(`[opportunities] source=dynamodb count=${records.length}`);
+    // Optional page size so light surfaces (the homepage board) never pull the
+    // whole table. `count` stays the size of the full filtered set.
+    const limitRaw = Number.parseInt(q["limit"] ?? "", 10);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 1000) : undefined;
+    const page = limit ? records.slice(0, limit) : records;
+    console.log(`[opportunities] source=dynamodb count=${records.length} sent=${page.length}`);
     res.json({
       source: "dynamodb",
       table: "stempath-data",
       pendingVisible: pendingRecordsAllowed(),
       count: records.length,
-      opportunities: records,
+      opportunities: page,
     });
   } catch (error) {
     safeError(res, error);

@@ -246,7 +246,7 @@ export function IntakeForm({
   }
 
   return (
-    <div className="relative rounded-[12px] border border-border bg-[rgba(8,10,13,0.78)] p-4 backdrop-blur-sm sm:p-5">
+    <div className="relative rounded-[12px] border border-border bg-card p-4 shadow-[0_1px_0_rgba(20,21,22,0.04),0_14px_28px_-20px_rgba(20,21,22,0.5)] sm:p-5">
       <div className="flex flex-col gap-4">
         {/* Optional free-text question — still powers the AI search, now secondary. */}
         <div>

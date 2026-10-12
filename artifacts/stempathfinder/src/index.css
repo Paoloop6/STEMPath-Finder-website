@@ -55,51 +55,86 @@
   --badge-outline: rgba(0, 0, 0, 0.05);
   --opaque-button-border-intensity: -8;
 
-  /* STEMPath Finder brand tokens ---------------------------------------- */
-  /* Editorial dark system used by the homepage (Hero/Results/InteractiveField) */
-  --brand-bg: #070809;
-  --surface-1: #0d0f11;
-  --brand-surface: #131619;
-  --brand-text: #f4f4f0;
-  --brand-text-soft: #e6e6e2;
-  --brand-muted-1: #a6abb3;
-  --brand-muted-2: #8b9098;
-  --brand-muted-3: #737981;
-  --brand-muted-4: #4a4d52;
-  --brand-border: rgba(255, 255, 255, 0.09);
-  --brand-border-strong: rgba(255, 255, 255, 0.12);
-  --brand-border-active: rgba(255, 255, 255, 0.42);
-  --surface-subtle: rgba(255, 255, 255, 0.045);
-  --surface-hover: rgba(255, 255, 255, 0.075);
-  /* Off-white is the single action color (Apple/ChatGPT-restrained); green/amber/red are status only. */
-  --action-bg: #f4f4f0;
-  --action-text: #08090a;
-  --brand-accent: #8dc9a4;
-  --brand-accent-ink: #08090a;
-  --brand-warning: #d7a75b;
-  --brand-error: #df8d8d;
-  --brand-success: #8dc9a4;
+  /* NextStep Database: the concourse and the board ------------------------
+     A deep rail-green concourse (page ground) lettered in cream, one black
+     departures board with amber flaps, and safety orange as the single action
+     color. Green/amber/red lamps are status by law; orange is action by law. */
+  --hall: #113a2e;
+  --hall-deep: #0c2e24;
+  --hall-line: rgba(243, 236, 217, 0.14);
+  --hall-line-strong: rgba(243, 236, 217, 0.28);
+  --ink: #f3ecd9;
+  --ink-soft: #e2dbc6;
+  --ink-muted: #b9b6a1;
+  --ink-faint: #a3a893;
 
-  --page-width: 1240px;
+  --orange: #ff6a13;
+  --orange-hi: #ff7d33;
+  --orange-ink: #1a0d00;
+
+  --board: #0b0f0d;
+  --board-edge: #151a17;
+  --flap: #171b18;
+  --flap-hi: #212623;
+  --flap-split: rgba(0, 0, 0, 0.6);
+  --flap-text: #f4efe2;
+  --flap-dim: #8f958c;
+  --flap-amber: #f0b63c;
+  --signal-yellow: #f0b63c;
+  --signal-yellow-ink: #1a1400;
+  --signal-green: #5fd68f;
+  --signal-red: #f0705f;
+
+  /* Legacy brand names, re-valued for the concourse. */
+  --brand-bg: var(--hall);
+  --surface-1: #17493a;
+  --brand-surface: #17493a;
+  --brand-text: var(--ink);
+  --brand-text-soft: var(--ink-soft);
+  --brand-muted-1: var(--ink-muted);
+  --brand-muted-2: #aeab97;
+  --brand-muted-3: var(--ink-faint);
+  --brand-muted-4: #5f7a6d;
+  --brand-border: var(--hall-line);
+  --brand-border-strong: var(--hall-line-strong);
+  --brand-border-active: rgba(243, 236, 217, 0.6);
+  --surface-subtle: rgba(243, 236, 217, 0.06);
+  --surface-hover: rgba(243, 236, 217, 0.1);
+  --action-bg: var(--orange);
+  --action-text: var(--orange-ink);
+  --brand-accent: var(--orange);
+  --brand-accent-ink: var(--orange-ink);
+  --brand-warning: var(--signal-yellow);
+  --brand-error: var(--signal-red);
+  --brand-success: var(--signal-green);
+
+  --page-width: 1280px;
   --content-width: 780px;
   --story-width: 1040px;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* Site-wide light tokens (admin, legacy match/results pages) */
-  --brand-page-bg: #f6f8fc;
+  /* Motion. Strong curves; built-in easings are too weak. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-press: 160ms;
+  --motion-fast: 160ms;
+  --motion-base: 200ms;
+  --motion-slow: 240ms;
+  --motion-entrance: 420ms;
+  --motion-flap: 260ms;
+
+  /* Admin keeps a plain light theme on its own tokens. */
+  --brand-page-bg: #f4f5f2;
   --brand-card: #ffffff;
   --brand-light-text: #172033;
   --brand-light-muted: #667085;
-  --brand-light-error: #dc2626;
+  --brand-light-error: #c9463a;
 
-  --radius-control: 0.625rem;
-  --radius-button: 0.375rem;
-  --radius-card: 0.75rem;
-
-  --motion-fast: 160ms;
-  --motion-base: 200ms;
-  --motion-slow: 220ms;
-  --motion-entrance: 550ms;
+  --radius-control: 0.375rem;
+  --radius-button: 0.25rem;
+  --radius-card: 0.375rem;
+  --radius-small: 0.25rem;
+  --radius-large: 0.5rem;
 
   --space-1: 0.5rem;
   --space-2: 1rem;
@@ -110,187 +145,894 @@
   --space-7: 6rem;
   /* ---------------------------------------------------------------------- */
 
-  --background: var(--brand-page-bg);
-  --foreground: var(--brand-light-text);
+  --background: var(--hall);
+  --foreground: var(--ink);
 
-  --border: #e6eaf0;
-  --input: #e6eaf0;
-  --ring: var(--brand-accent);
+  --border: var(--hall-line);
+  --input: var(--hall-line-strong);
+  --ring: var(--orange);
 
-  --card: var(--brand-card);
-  --card-foreground: var(--brand-light-text);
-  --card-border: #e6eaf0;
+  --card: #17493a;
+  --card-foreground: var(--ink);
+  --card-border: var(--hall-line);
 
-  --sidebar: 195 60% 18%;
-  --sidebar-foreground: 0 0% 96%;
-  --sidebar-border: 195 60% 13%;
-  --sidebar-primary: 195 60% 40%;
-  --sidebar-primary-foreground: 0 0% 96%;
-  --sidebar-accent: 195 60% 22%;
-  --sidebar-accent-foreground: 0 0% 96%;
-  --sidebar-ring: 195 60% 40%;
+  --sidebar: 160 55% 10%;
+  --sidebar-foreground: 44 50% 92%;
+  --sidebar-border: 160 40% 16%;
+  --sidebar-primary: 22 100% 54%;
+  --sidebar-primary-foreground: 30 100% 5%;
+  --sidebar-accent: 160 40% 16%;
+  --sidebar-accent-foreground: 44 50% 92%;
+  --sidebar-ring: 22 100% 54%;
 
-  --popover: var(--brand-card);
-  --popover-foreground: var(--brand-light-text);
-  --popover-border: #e6eaf0;
+  --popover: #17493a;
+  --popover-foreground: var(--ink);
+  --popover-border: var(--hall-line-strong);
 
-  --primary: var(--brand-accent);
-  --primary-foreground: var(--brand-accent-ink);
+  --primary: var(--orange);
+  --primary-foreground: var(--orange-ink);
 
-  --secondary: #eef0fd;
-  --secondary-foreground: var(--brand-light-text);
+  --secondary: #1c5544;
+  --secondary-foreground: var(--ink);
 
-  --muted: #f1f4f9;
-  --muted-foreground: var(--brand-light-muted);
+  --muted: #1c5544;
+  --muted-foreground: var(--ink-muted);
 
-  --accent: #eef0fd;
-  --accent-foreground: var(--brand-light-text);
+  --accent: #1c5544;
+  --accent-foreground: var(--ink);
 
-  --destructive: var(--brand-light-error);
-  --destructive-foreground: #ffffff;
+  --destructive: var(--signal-red);
+  --destructive-foreground: #1a0a08;
 
-  --chart-1: 160 100% 45%;
-  --chart-2: 191 77% 55%;
-  --chart-3: 150 50% 40%;
-  --chart-4: 0 72% 51%;
-  --chart-5: 40 80% 50%;
+  --chart-1: 22 100% 54%;
+  --chart-2: 145 60% 60%;
+  --chart-3: 42 85% 59%;
+  --chart-4: 6 82% 66%;
+  --chart-5: 44 50% 80%;
 
-  --app-font-sans: 'Inter', system-ui, sans-serif;
+  --app-font-sans: 'Archivo', 'Helvetica Neue', Arial, system-ui, sans-serif;
   --app-font-serif: 'Georgia', serif;
-  --app-font-mono: 'JetBrains Mono', monospace;
-  --app-font-annotation: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --app-font-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+  --app-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --app-font-annotation: 'Archivo', 'Helvetica Neue', Arial, system-ui, sans-serif;
+  --app-font-display: 'Archivo', 'Arial Black', 'Helvetica Neue', system-ui, sans-serif;
+  --app-font-board: 'Archivo', 'Arial Narrow', 'Helvetica Neue', system-ui, sans-serif;
 
-  --radius: 0.375rem;
+  --radius: 0.25rem;
 
   --primary-border: hsl(from var(--primary) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --secondary-border: hsl(from var(--secondary) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --muted-border: hsl(from var(--muted) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --accent-border: hsl(from var(--accent) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --destructive-border: hsl(from var(--destructive) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  color-scheme: dark;
+  accent-color: var(--orange);
 }
 
+/* The board's own palette, for anything rendered inside a .dark scope. */
 .dark {
-  --background: var(--brand-bg);
-  --foreground: var(--brand-text);
-  --border: var(--brand-border-strong);
-  --input: var(--brand-border-strong);
-  --ring: var(--brand-accent);
+  --background: var(--board);
+  --foreground: var(--flap-text);
+  --border: rgba(244, 239, 226, 0.12);
+  --input: rgba(244, 239, 226, 0.16);
+  --ring: var(--signal-yellow);
 
-  --card: var(--brand-surface);
-  --card-foreground: var(--brand-text);
-  --card-border: var(--brand-border-strong);
+  --card: var(--flap);
+  --card-foreground: var(--flap-text);
+  --card-border: rgba(244, 239, 226, 0.12);
 
-  --popover: var(--brand-surface);
-  --popover-foreground: var(--brand-text);
-  --popover-border: var(--brand-border-strong);
+  --popover: var(--flap);
+  --popover-foreground: var(--flap-text);
+  --popover-border: rgba(244, 239, 226, 0.14);
 
-  --primary: var(--action-bg);
-  --primary-foreground: var(--action-text);
+  --primary: var(--flap-text);
+  --primary-foreground: var(--board);
 
-  --secondary: #1a1d20;
-  --secondary-foreground: #e6e6e2;
+  --secondary: var(--flap-hi);
+  --secondary-foreground: var(--flap-text);
 
-  --muted: #1a1d20;
-  --muted-foreground: var(--brand-muted-2);
+  --muted: var(--flap-hi);
+  --muted-foreground: var(--flap-dim);
 
-  --accent: #1a1d20;
-  --accent-foreground: var(--brand-text);
+  --accent: var(--flap-hi);
+  --accent-foreground: var(--flap-text);
 
-  --destructive: var(--brand-error);
-  --destructive-foreground: #08090a;
+  --destructive: var(--signal-red);
+  --destructive-foreground: var(--board);
+
+  --brand-text: var(--flap-text);
+  --brand-muted-1: #b8bbc1;
+  --brand-muted-3: var(--flap-dim);
+  --brand-border: rgba(244, 239, 226, 0.12);
+  --brand-success: var(--signal-green);
+  --brand-warning: var(--signal-yellow);
+  --brand-error: var(--signal-red);
+  color-scheme: dark;
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+  ::selection {
+    background: var(--orange);
+    color: var(--orange-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .dark :focus-visible {
+    outline-color: var(--orange);
+  }
+  a {
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+  }
+  /* Scrollbars belong to the design too. */
+  * {
+    scrollbar-color: var(--hall-line-strong) transparent;
+    scrollbar-width: thin;
   }
 }
 
-/* STEMPath Finder brand utilities ----------------------------------------- */
+/* Type utilities ------------------------------------------------------------ */
 
 .font-display {
   font-family: var(--app-font-display);
+  font-stretch: 118%;
+  font-weight: 900;
+  font-feature-settings: 'tnum';
 }
 
-/* Page transition — content fades/slides up on each route change. */
+.font-board {
+  font-family: var(--app-font-board);
+  font-stretch: 75%;
+  font-feature-settings: 'tnum';
+  text-transform: uppercase;
+}
+
+.font-annotation {
+  font-family: var(--app-font-annotation);
+  font-feature-settings: 'tnum';
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pressables ---------------------------------------------------------------- */
+
+/* Every button, chip, and card-link gets a 160ms press. Hover motion is gated
+   to real pointers so touch never fires a phantom hover. */
+.press {
+  transition:
+    transform var(--motion-press) var(--ease-out),
+    background-color var(--motion-base) ease,
+    color var(--motion-base) ease,
+    border-color var(--motion-base) ease,
+    box-shadow var(--motion-base) ease;
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+.btn-slab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-button);
+  background: var(--orange);
+  color: var(--orange-ink);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  padding: 0.8rem 1.25rem;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 10px 24px -12px rgba(255, 106, 19, 0.6);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-slab:hover {
+    background: var(--orange-hi);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 14px 28px -12px rgba(255, 106, 19, 0.7);
+  }
+}
+.btn-slab:active {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 4px 10px -8px rgba(255, 106, 19, 0.5);
+}
+
+.btn-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--hall-line-strong);
+  background: transparent;
+  color: var(--ink);
+  font-weight: 500;
+  padding: calc(0.8rem - 1px) 1.25rem;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-line:hover {
+    background: var(--surface-subtle);
+    border-color: var(--brand-border-active);
+  }
+}
+
+/* Chips are the board's filters. Selected = ink slab, like a pressed key. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 4px;
+  border: 1px solid var(--hall-line-strong);
+  padding: 0.35rem 0.75rem;
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--ink-soft);
+  background: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .chip:hover {
+    background: var(--surface-subtle);
+    border-color: var(--brand-border-active);
+  }
+}
+.chip[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--hall-deep);
+}
+
+/* Nav: the active tab is an underline that slides between links. */
+.nav-link {
+  position: relative;
+  transition: color var(--motion-base) ease;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0.6rem;
+  right: 0.6rem;
+  bottom: -1px;
+  height: 2px;
+  background: var(--orange);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--motion-base) var(--ease-out);
+}
+.nav-link[aria-current='page']::after {
+  transform: scaleX(1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-link:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+/* The board ------------------------------------------------------------------ */
+
+.board {
+  --board-radius: 6px;
+  position: relative;
+  background: var(--board);
+  color: var(--flap-text);
+  border-radius: var(--board-radius);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 30px 60px -28px rgba(0, 0, 0, 0.8),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+  border: 1px solid #000;
+}
+/* The mounting frame: a hairline of lighter metal around the panel. */
+.board::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: calc(var(--board-radius) + 4px);
+  border: 1px solid var(--hall-line-strong);
+  pointer-events: none;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: 7.25rem minmax(0, 1.9fr) minmax(0, 1.1fr) 8.5rem 7.5rem;
+  column-gap: 1rem;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .board-grid {
+    grid-template-columns: 4.7rem minmax(0, 1fr) 5.2rem;
+    column-gap: 0.6rem;
+  }
+  .board-grid > .col-org,
+  .board-grid > .col-type {
+    display: none;
+  }
+  .board-row {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+  .flap-word {
+    font-size: calc(var(--fs) * 0.8) !important;
+  }
+  .board-row .board-title {
+    font-size: 18px;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.02;
+  }
+}
+
+.board-row {
+  color: inherit;
+  text-decoration: none;
+  border-top: 1px solid rgba(244, 239, 226, 0.07);
+  padding: 0.95rem 1.4rem;
+  transition: background-color var(--motion-base) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .board-row:hover {
+    background: rgba(244, 239, 226, 0.045);
+  }
+  .board-row:hover .board-title {
+    color: #fff;
+  }
+}
+.board-row:active {
+  background: rgba(244, 239, 226, 0.07);
+}
+.board-row:focus-visible {
+  outline-offset: -3px;
+}
+
+/* Rows arrive by flapping, not fading: every tile on a new row flips in,
+   row by row (40ms) and tile by tile (22ms). */
+.board-row .flap[data-flip] > span,
+.board-row .flap-text[data-flip] {
+  animation-delay: calc(var(--i, 0) * 40ms + var(--k, 0) * 22ms);
+}
+
+/* A flap cell. Each is one character on a split-flap: a dark tile, a hairline
+   split across the middle, and a top half that flips down when the character
+   changes. */
+.flap-word {
+  display: inline-flex;
+  gap: 2px;
+  font-size: var(--fs, 15px);
+  font-family: var(--app-font-board);
+  font-stretch: 75%;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-feature-settings: 'tnum';
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+.flap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 0.74em;
+  height: 1.28em;
+  border-radius: 2px;
+  background: linear-gradient(var(--flap-hi), var(--flap) 48%, #111412 52%, var(--flap-hi));
+  color: var(--flap-text);
+  perspective: 300px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+.flap::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--flap-split);
+  transform: translateY(-0.5px);
+}
+.flap > span {
+  display: block;
+  transform-origin: 50% 50%;
+}
+.flap[data-flip] > span {
+  animation: flap-flip var(--motion-flap) var(--ease-out) both;
+  animation-delay: calc(var(--k, 0) * 22ms);
+}
+@keyframes flap-flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  45% {
+    transform: rotateX(-88deg);
+    opacity: 0.6;
+  }
+  55% {
+    transform: rotateX(88deg);
+    opacity: 0.6;
+  }
+  100% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+.flap-word[data-tone='amber'] .flap { color: var(--flap-amber); }
+.flap-word[data-tone='yellow'] .flap { color: var(--signal-yellow); }
+.flap-word[data-tone='green'] .flap { color: var(--signal-green); }
+.flap-word[data-tone='red'] .flap { color: var(--signal-red); }
+.flap-word[data-tone='dim'] .flap { color: var(--flap-dim); }
+.flap[data-blank] {
+  opacity: 0.55;
+}
+
+/* Proportional text on the board that still flips as a block when it changes. */
+.flap-text {
+  display: block;
+  transform-origin: 50% 0;
+  backface-visibility: hidden;
+}
+.flap-text[data-flip] {
+  animation: flap-flip var(--motion-flap) var(--ease-out) both;
+}
+
+.board-title {
+  font-family: var(--app-font-board);
+  font-stretch: 75%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.015em;
+  font-size: 23px;
+  line-height: 1.05;
+  color: var(--flap-text);
+  transition: color var(--motion-base) ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.board-sub {
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--flap-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Live indicator: a steady green lamp with a slow breath. State, not decoration. */
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--signal-green);
+  box-shadow: 0 0 0 0 rgba(87, 208, 138, 0.5);
+  animation: live-pulse 2.4s var(--ease-out) infinite;
+}
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(87, 208, 138, 0.55); }
+  70% { box-shadow: 0 0 0 7px rgba(87, 208, 138, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(87, 208, 138, 0); }
+}
+
+/* Signage plate: the board's yellow-on-black lettering, used inline in the hall
+   for the one phrase or number a sign is about. */
+.plate {
+  display: inline-block;
+  background: var(--orange);
+  color: var(--orange-ink);
+  padding: 0.02em 0.18em 0.06em;
+  border-radius: 0.06em;
+  line-height: 0.95;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* The plated phrase wipes in once per page load, left to right, like a sign
+   being slid into its rail. 600ms in-out, after the headline has painted. */
+.plate[data-wipe] {
+  clip-path: inset(0 100% 0 0);
+  animation: plate-wipe 600ms var(--ease-in-out) 160ms forwards;
+}
+@keyframes plate-wipe {
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Scroll reveal for the gate directory: each row uncovers top-down, once,
+   50ms apart. Marketing surface only; never on a list people scan daily. */
+.reveal-row {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 500ms var(--ease-in-out);
+  transition-delay: calc(var(--r, 0) * 50ms);
+}
+.reveal-row[data-visible] {
+  clip-path: inset(0 0 0 0);
+}
+
+/* Arrow nudge on slab and line buttons: near-imperceptible, pointer-gated. */
+.btn-slab svg,
+.btn-line svg {
+  transition: transform var(--motion-base) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-slab:hover svg,
+  .btn-line:hover svg {
+    transform: translateX(2px);
+  }
+}
+
+/* Save control: a small plate at the row's right edge. Pressed = amber check. */
+.save-btn {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 4px;
+  border: 1px solid rgba(244, 239, 226, 0.18);
+  background: var(--flap);
+  color: var(--flap-dim);
+  transition:
+    transform var(--motion-press) var(--ease-out),
+    background-color var(--motion-base) ease,
+    color var(--motion-base) ease,
+    border-color var(--motion-base) ease;
+}
+.save-btn:active {
+  transform: translateY(-50%) scale(0.94);
+}
+@media (hover: hover) and (pointer: fine) {
+  .save-btn:hover {
+    color: var(--flap-text);
+    border-color: rgba(244, 239, 226, 0.4);
+  }
+}
+.save-btn[aria-pressed='true'] {
+  background: var(--flap-amber);
+  border-color: var(--flap-amber);
+  color: var(--signal-yellow-ink);
+}
+.board-row.board-grid > :last-child {
+  padding-right: 2.6rem;
+}
+
+/* The stamp: slams onto the row once when a departure is saved. Rare, so it
+   gets the delight budget: 220ms strong ease-out from 1.4x, a slight tilt. */
+.stamp {
+  position: absolute;
+  right: 3.4rem;
+  top: 50%;
+  z-index: 2;
+  pointer-events: none;
+  font-family: var(--app-font-board);
+  font-stretch: 75%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 15px;
+  line-height: 1;
+  padding: 0.3em 0.5em;
+  color: var(--flap-amber);
+  border: 2px solid var(--flap-amber);
+  border-radius: 3px;
+  transform-origin: 60% 50%;
+  animation:
+    stamp-in 220ms var(--ease-out) both,
+    stamp-out 240ms ease 860ms forwards;
+}
+@keyframes stamp-in {
+  from { opacity: 0; transform: translateY(-50%) rotate(-10deg) scale(1.4); }
+  to { opacity: 1; transform: translateY(-50%) rotate(-5deg) scale(1); }
+}
+@keyframes stamp-out {
+  to { opacity: 0; }
+}
+
+/* Paging line under the header: fills over one page interval, linear, then
+   the next page flaps in. Pauses while the visitor's pointer is on the board. */
+.board-pager {
+  height: 2px;
+  background: rgba(244, 239, 226, 0.08);
+  overflow: hidden;
+}
+.board-pager-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--flap-amber);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.board-pager[data-cycling] .board-pager-fill {
+  animation: pager-fill var(--page-ms, 20000ms) linear forwards;
+}
+@keyframes pager-fill {
+  to { transform: scaleX(1); }
+}
+.pager-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 4px;
+  border: 1px solid rgba(244, 239, 226, 0.16);
+  color: var(--flap-text);
+  background: transparent;
+}
+.pager-btn:disabled {
+  opacity: 0.35;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pager-btn:not(:disabled):hover {
+    background: rgba(244, 239, 226, 0.08);
+  }
+}
+.pager-btn[aria-pressed='true'] {
+  background: var(--flap-amber);
+  border-color: var(--flap-amber);
+  color: var(--signal-yellow-ink);
+}
+
+/* Boarding passes in the drawer: a stub, a perforation, a body. */
+.pass {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  background: var(--flap);
+  border: 1px solid rgba(244, 239, 226, 0.14);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), 0 14px 30px -20px rgba(0, 0, 0, 0.8);
+}
+.pass-stub {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 0.5rem;
+  background: var(--board);
+  border-right: 2px dashed rgba(244, 239, 226, 0.22);
+}
+/* Perforation notches, cut from the drawer's own ground. */
+.pass-stub::before,
+.pass-stub::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--board);
+  box-shadow: inset 0 0 0 1px rgba(244, 239, 226, 0.14);
+}
+.pass-stub::before { top: -8px; }
+.pass-stub::after { bottom: -8px; }
+.pass-body {
+  padding: 0.9rem 1rem 1rem 1.1rem;
+}
+
+/* Sonner toasts, dressed as small board plates. */
+.sonner-board {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  padding: 0.8rem 0.9rem 0.8rem 1rem;
+  background: var(--board);
+  color: var(--flap-text);
+  border: 1px solid rgba(244, 239, 226, 0.18);
+  border-radius: 6px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), 0 20px 40px -20px rgba(0, 0, 0, 0.8);
+  font-family: var(--app-font-sans);
+}
+.sonner-board [data-content] {
+  min-width: 0;
+  flex: 1;
+}
+.sonner-title {
+  font-family: var(--app-font-board);
+  font-stretch: 75%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 14px;
+  color: var(--flap-amber);
+}
+.sonner-desc {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--flap-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sonner-action {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+  background: var(--flap-text);
+  color: var(--board);
+  transition: transform var(--motion-press) var(--ease-out);
+}
+.sonner-action:active {
+  transform: scale(0.97);
+}
+
+/* Hero count: the live total as giant flaps in the hall. */
+.hero-count .flap-word {
+  gap: 4px;
+}
+.hero-count .flap {
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(0, 0, 0, 0.4), 0 12px 28px -14px rgba(0, 0, 0, 0.8);
+}
+
+/* Section pacing: alternating hall and hall-deep bands, hairline ruled. */
+.band-deep {
+  background: var(--hall-deep);
+}
+
+/* The colon in the clock blinks like a real one: 1 s, linear, on/off. */
+.blink {
+  animation: blink 1s steps(1, end) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Skeleton rows while the first fetch is in flight. Runs on the compositor. */
+.board-skel {
+  height: 14px;
+  border-radius: 2px;
+  background: rgba(244, 239, 226, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+.board-skel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(244, 239, 226, 0.08), transparent);
+  animation: skeleton-shimmer-sweep 1.4s ease-in-out infinite;
+}
+
+/* Gate directory: a ruled signage list on the hall ground. */
+.gate {
+  display: grid;
+  grid-template-columns: 3.2rem minmax(0, 1fr) auto;
+  column-gap: 1.25rem;
+  align-items: center;
+  padding: 1.25rem 0.25rem;
+  border-top: 1px solid var(--hall-line-strong);
+  color: var(--ink);
+  text-decoration: none;
+}
+.gate-code {
+  font-family: var(--app-font-board);
+  font-stretch: 75%;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  padding: 0.4rem 0;
+  text-align: center;
+  border-radius: 3px;
+  background: var(--board);
+  color: var(--flap-amber);
+  transition: background-color var(--motion-base) ease;
+}
+.gate-arrow {
+  transition: transform var(--motion-base) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .gate:hover .gate-label {
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+  .gate:hover .gate-arrow {
+    transform: translateX(4px);
+  }
+}
+
+/* Opening a departure: the whole document crossfades quickly while the title
+   travels from its row to the record's heading. Strong in-out for the move. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 240ms;
+  animation-timing-function: var(--ease-out);
+}
+::view-transition-group(opp-title) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-in-out);
+}
+::view-transition-old(opp-title) {
+  animation: vt-title-out 200ms var(--ease-out) both;
+}
+::view-transition-new(opp-title) {
+  animation: vt-title-in 260ms var(--ease-out) 120ms both;
+}
+@keyframes vt-title-out {
+  to { opacity: 0; }
+}
+@keyframes vt-title-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Page transition: content clips upward-in on each route change. */
+.page-enter {
+  animation: page-enter 360ms var(--ease-out) both;
+}
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-.page-enter {
-  animation: page-enter 460ms var(--ease-out) both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .page-enter {
-    animation: none !important;
-  }
-}
 
-/* Liquid-glass surface — translucent, blurred, specular top highlight. */
+/* Legacy surfaces still referenced by other pages ------------------------ */
+
 .liquid-glass {
-  background: rgba(255, 255, 255, 0.055);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
-    0 10px 34px rgba(0, 0, 0, 0.4);
+  background: rgba(23, 73, 58, 0.85);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--hall-line);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 10px 30px -22px rgba(0, 0, 0, 0.6);
 }
 
-.font-annotation {
-  font-family: var(--app-font-annotation);
-}
-
-/* Homepage noise texture — extremely subtle grain over the dark editorial hero */
 .noise-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 40;
-  opacity: 0.028;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  display: none;
 }
 
 .composer-shell {
-  background: var(--brand-surface);
-  border: 1px solid var(--brand-border-strong);
-  border-left: 2.5px solid var(--brand-accent);
-  border-radius: 0 var(--radius-card) var(--radius-card) 0;
-  transition: border-color var(--motion-base) ease;
+  background: var(--card);
+  border: 1px solid var(--hall-line-strong);
+  border-radius: var(--radius-card);
+  transition: border-color var(--motion-base) ease, box-shadow var(--motion-base) ease;
 }
-
 .composer-shell:focus-within {
-  border-color: rgba(0, 229, 160, 0.5);
-  border-left-color: var(--brand-accent);
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 106, 19, 0.2);
 }
 
 .terminal-link {
-  color: var(--brand-muted-3);
+  color: var(--ink-muted);
   text-decoration: none;
   transition: color var(--motion-base) ease;
 }
-
 .terminal-link:hover {
-  color: var(--brand-text-soft);
-}
-
-.result-row:hover .result-row-title {
-  color: var(--brand-accent);
+  color: var(--ink);
 }
 
 .result-row-title {
   transition: color var(--motion-base) ease;
+}
+.result-row:hover .result-row-title {
+  color: var(--brand-accent);
 }
 
 .loading-dots {
@@ -298,49 +1040,33 @@
   align-items: center;
   gap: 4px;
 }
-
 .loading-dots span {
   width: 5px;
   height: 5px;
   border-radius: 999px;
   background: currentColor;
-  animation: loading-dot-bounce 1.2s ease-in-out infinite;
+  animation: loading-dot-pulse 1s ease-in-out infinite;
 }
-
-.loading-dots span:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.loading-dots span:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-@keyframes loading-dot-bounce {
-  0%, 80%, 100% {
-    opacity: 0.35;
-    transform: translateY(0);
-  }
-  40% {
-    opacity: 1;
-    transform: translateY(-3px);
-  }
+.loading-dots span:nth-child(2) { animation-delay: 0.12s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.24s; }
+@keyframes loading-dot-pulse {
+  0%, 80%, 100% { opacity: 0.35; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
 }
 
 .skeleton-shimmer {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(243, 236, 217, 0.08);
 }
-
 .skeleton-shimmer::after {
   content: '';
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
-  animation: skeleton-shimmer-sweep 1.6s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(243, 236, 217, 0.08), transparent);
+  animation: skeleton-shimmer-sweep 1.4s ease-in-out infinite;
 }
-
 @keyframes skeleton-shimmer-sweep {
   100% {
     transform: translateX(100%);
@@ -348,28 +1074,63 @@
 }
 
 .entrance-fade-up {
-  animation: entrance-fade-up var(--motion-entrance) ease-out both;
+  animation: entrance-fade-up var(--motion-entrance) var(--ease-out) both;
 }
-
 @keyframes entrance-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
+/* Reduced motion: keep the fades that aid comprehension, drop the movement. */
 @media (prefers-reduced-motion: reduce) {
-  .loading-dots span,
-  .skeleton-shimmer::after,
+  .page-enter,
   .entrance-fade-up {
     animation: none !important;
   }
-
-  * {
-    transition-duration: 0.01ms !important;
+  .board-row {
+    opacity: 1;
+    transition: opacity 200ms ease;
+    @starting-style {
+      opacity: 0;
+    }
+  }
+  .flap[data-flip] > span,
+  .flap-text[data-flip] {
+    animation: flap-fade 200ms ease both;
+  }
+  @keyframes flap-fade {
+    from { opacity: 0.4; }
+    to { opacity: 1; }
+  }
+  .blink,
+  .live-dot,
+  .loading-dots span,
+  .skeleton-shimmer::after,
+  .board-skel::after {
+    animation: none !important;
+  }
+  .press:active,
+  .gate:hover .gate-arrow,
+  .btn-slab:hover svg,
+  .btn-line:hover svg {
+    transform: none;
+  }
+  .plate[data-wipe] {
+    animation: none;
+    clip-path: none;
+  }
+  .stamp {
+    animation: stamp-fade 200ms ease both, stamp-out 240ms ease 860ms forwards;
+  }
+  @keyframes stamp-fade {
+    from { opacity: 0; transform: translateY(-50%) rotate(-5deg); }
+    to { opacity: 1; transform: translateY(-50%) rotate(-5deg); }
+  }
+  .board-pager-fill {
+    animation: none !important;
+  }
+  .reveal-row {
+    clip-path: none;
+    transition: none;
   }
 }

@@ -14,6 +14,8 @@ The OpenAPI file describes the original PostgreSQL API. Newer DynamoDB endpoints
 
 See [local development](../docs/local-development.md). `npm run start:example` starts the unchanged API with a fresh temporary session secret and a local database URL. It checks startup/health without real keys; data requests still need services.
 
-## Student-video endpoint in the preserved snapshot
+## Student Stories API
 
-The [student-video route](https://github.com/Paoloop6/STEMPath-Finder-website/blob/original-public-main/artifacts/api-server/src/routes/student-videos.ts) and its router registration are already tracked on `original-public-main`. The main branch API does not mount that route. The two snapshots were not merged during this documentation-only cleanup.
+[`GET /api/student-videos`](../artifacts/api-server/src/routes/student-videos.ts) is registered in the main API router. It joins published video rows with profile activities and related opportunities. `?refresh=true` clears its five-minute response cache. Ingestion remains in [nightly-job/youtube](../nightly-job/youtube/).
+
+Run `node scripts/submission/check-student-stories.mjs` after building to verify the endpoint against fictional DynamoDB responses on loopback, without real credentials or cloud requests.

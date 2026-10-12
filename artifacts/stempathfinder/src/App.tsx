@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
@@ -100,6 +101,7 @@ function App() {
           <Router />
         </WouterRouter>
         <Toaster />
+        <Sonner position="bottom-left" theme="dark" offset={20} gap={10} toastOptions={{ duration: 4000, unstyled: true, classNames: { toast: 'sonner-board', title: 'sonner-title', description: 'sonner-desc', actionButton: 'sonner-action' } }} />
         <Analytics />
       </TooltipProvider>
     </QueryClientProvider>
