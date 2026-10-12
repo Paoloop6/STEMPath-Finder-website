@@ -52,3 +52,35 @@ Thumbs.db
 .env
 .vercel
 .env*
+
+# Submission hygiene (keep templates and the small fictional sample)
+!.env.example
+!**/.env.example
+/api/_app.mjs
+/supabase/.temp/
+/attached_assets/
+/data/*
+!/data/sample-opportunities.json
+*.log
+*.zip
+*.dump
+*.sql.gz
+*.sqlite*
+*.db
+*.tsv
+*.csv
+*.mp4
+*.mov
+*.textClipping
+**/transcripts/
+**/saved-pages/
+**/exports/
+**/backups/
+.aws/
+*.pem
+*.key
+DerivedData/
+build/
+xcuserdata/
+# pnpm-lock.yaml is the authoritative workspace lockfile.
+/package-lock.json

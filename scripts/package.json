@@ -10,7 +10,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "anonymize:students": "tsx --env-file=../.env ./anonymize-student-profiles.ts",
     "check:logos": "tsx --env-file=../.env ./check-university-logos.ts",
-    "test:opportunities": "tsx --env-file=../.env ./test-opportunity-feature.ts"
+    "test:opportunities": "tsx --env-file=../.env ./test-opportunity-feature.ts",
+    "fetch:youtube": "tsx --env-file=../.env ../nightly-job/youtube/fetch-youtube-college-activities.ts",
+    "sync:videos": "tsx --env-file=../.env ../nightly-job/youtube/sync-student-videos.ts"
   },
   "dependencies": {
     "@workspace/aws": "workspace:*"

@@ -3,9 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "typecheck:libs": "tsc --build",  
+    "build": "node scripts/submission/local.mjs build",
+    "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "test:deepseek": "node --env-file=.env scripts/test-deepseek.mjs",
     "test:aws-storage": "pnpm --filter @workspace/scripts run test:aws-storage",
@@ -15,7 +14,12 @@
     "lambda:build": "pnpm --filter @workspace/lambda-opportunities run build",
     "lambda:deploy": "pnpm --filter @workspace/lambda-opportunities run deploy",
     "lambda:invoke:test": "pnpm --filter @workspace/lambda-opportunities run test:invoke",
-    "test:opportunities": "pnpm --filter @workspace/scripts run test:opportunities"
+    "test:opportunities": "pnpm --filter @workspace/scripts run test:opportunities",
+    "postinstall": "node scripts/submission/install.mjs",
+    "build:workspace": "pnpm run typecheck && pnpm -r --if-present run build",
+    "start:example": "node scripts/submission/local.mjs server",
+    "dev:website": "node scripts/submission/local.mjs website",
+    "build:sample": "pnpm --filter @workspace/scripts exec tsx ./submission/sample-build.ts"
   },
   "private": true,
   "dependencies": {
@@ -24,5 +28,6 @@
   "devDependencies": {
     "prettier": "^3.9.5",
     "typescript": "~5.9.3"
-  }
+  },
+  "packageManager": "pnpm@11.18.0"
 }
